@@ -226,6 +226,8 @@ runStoreTests().then(() => {
   return runNLPTests();
 }).then(() => {
   return runPWATests();
+}).then(() => {
+  return runReminderTests();
 }).catch(err => {
   console.error('✗ Tests Failed:', err);
   process.exit(1);
@@ -730,5 +732,124 @@ async function runPWATests() {
   assert.strictEqual(serviceWorkerScript, 'sw.js', 'Service worker must register sw.js');
 
   console.log('✓ All Task 7 PWA Tests Passed!');
+}
+
+// Reminders Mock Setup
+let notificationInstantiated = false;
+let notificationTitle = null;
+let notificationOptions = null;
+let notificationPermissionGranted = 'default';
+
+globalThis.Notification = class MockNotification {
+  static get permission() {
+    return notificationPermissionGranted;
+  }
+  static requestPermission() {
+    notificationPermissionGranted = 'granted';
+    return Promise.resolve(notificationPermissionGranted);
+  }
+  constructor(title, options) {
+    notificationInstantiated = true;
+    notificationTitle = title;
+    notificationOptions = options;
+  }
+};
+
+let audioContextCreated = false;
+let oscStarted = false;
+let oscStopped = false;
+let oscFreqVal = null;
+
+class MockOscillator {
+  constructor() {
+    this.frequency = {
+      setValueAtTime: (val) => { oscFreqVal = val; }
+    };
+  }
+  connect() {}
+  start() { oscStarted = true; }
+  stop() { oscStopped = true; }
+}
+
+class MockGainNode {
+  constructor() {
+    this.gain = {
+      setValueAtTime: () => {},
+      linearRampToValueAtTime: () => {}
+    };
+  }
+  connect() {}
+}
+
+globalThis.AudioContext = class MockAudioContext {
+  constructor() {
+    audioContextCreated = true;
+    this.currentTime = 0;
+    this.destination = {};
+  }
+  createOscillator() { return new MockOscillator(); }
+  createGain() { return new MockGainNode(); }
+};
+
+async function runReminderTests() {
+  console.log('Running Task 8 Local Reminders & Audio Alerts Tests...');
+
+  // Reset mocks state
+  notificationInstantiated = false;
+  notificationTitle = null;
+  notificationOptions = null;
+  notificationPermissionGranted = 'default';
+  audioContextCreated = false;
+  oscStarted = false;
+  oscStopped = false;
+  oscFreqVal = null;
+
+  const { Notifier } = await import('./src/utils.js');
+  const { TaskStore } = await import('./src/store.js');
+
+  const store = new TaskStore();
+  await store.init();
+
+  const notifier = new Notifier(store);
+
+  // Test permission request
+  const perm = await notifier.requestPermission();
+  assert.strictEqual(perm, 'granted', 'requestPermission should return granted');
+  assert.strictEqual(notificationPermissionGranted, 'granted', 'Notification.requestPermission should toggle permission to granted');
+  console.log('✓ requestPermission verified');
+
+  // Seed a task with a past reminder timestamp
+  const task = {
+    id: 'tr-rem',
+    title: 'Water the plants',
+    completed: false,
+    reminderTimestamp: Date.now() - 5000 // 5 seconds ago
+  };
+  await store.put('tasks', task);
+
+  // Run reminder checks
+  notifier.checkReminders();
+
+  // Verify web notification was triggered
+  assert.ok(notificationInstantiated, 'Web Notification should be triggered when reminder timestamp is met');
+  assert.strictEqual(notificationTitle, 'Cognify Reminder', 'Notification title should be Cognify Reminder');
+  assert.strictEqual(notificationOptions.body, 'Water the plants', 'Notification body should be task title');
+  console.log('✓ Web Push Notification trigger verified');
+
+  // Verify Web Audio alert was played
+  assert.ok(audioContextCreated, 'AudioContext should be created to play sound');
+  assert.ok(oscStarted, 'Oscillator should be started to play alert sound');
+  assert.ok(oscStopped, 'Oscillator should be stopped after playing');
+  assert.strictEqual(oscFreqVal, 880, 'Beep alert frequency should be A5 (880Hz)');
+  console.log('✓ Foreground Web Audio beep verified');
+
+  // Verify app notifier is running
+  const { notifier: appNotifier } = await import('./src/app.js');
+  assert.ok(appNotifier, 'App must export notifier instance');
+  assert.ok(appNotifier.checkInterval, 'App notifier check loop must be active');
+  appNotifier.stopChecking(); // Clean up so tests can exit
+  console.log('✓ Main App Notifier integration verified');
+
+  console.log('✓ All Task 8 Reminder Tests Passed!');
 }
 

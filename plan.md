@@ -158,9 +158,9 @@
 - Consumes: `TaskStore`
 - Produces: Notifier interface with `requestPermission()` and `scheduleReminder(task)` using standard Web Notification API and foreground audio alerts.
 
-- [ ] **Step 1: Implement Notifier in src/utils.js** requesting Notification permission and providing a foreground check loop (running in active tab) to inspect tasks with reminder times matching current time.
-- [ ] **Step 2: Trigger Web Notifications** and local Web Audio API alerts when reminders fire.
-- [ ] **Step 3: Write tests mocking Notification constructor in tests.js and commit** (`WIP: Task 8 - Integrate local reminders and foreground audio alerts`).
+- [x] **Step 1: Implement Notifier in src/utils.js** requesting Notification permission and providing a foreground check loop (running in active tab) to inspect tasks with reminder times matching current time.
+- [x] **Step 2: Trigger Web Notifications** and local Web Audio API alerts when reminders fire.
+- [x] **Step 3: Write tests mocking Notification constructor in tests.js and commit** (`WIP: Task 8 - Integrate local reminders and foreground audio alerts`).
 
 ---
 

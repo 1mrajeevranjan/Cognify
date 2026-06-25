@@ -49,3 +49,94 @@ export function parseNaturalLanguage(text) {
     priority
   };
 }
+
+export class Notifier {
+  constructor(store) {
+    this.store = store;
+    this.checkInterval = null;
+    this.audioContext = null;
+    this.notifiedTaskIds = new Set();
+  }
+
+  async requestPermission() {
+    if (!('Notification' in globalThis)) return 'denied';
+    if (globalThis.Notification.permission === 'default') {
+      return await globalThis.Notification.requestPermission();
+    }
+    return globalThis.Notification.permission;
+  }
+
+  startChecking(intervalMs = 1000) {
+    if (this.checkInterval) return;
+    this.checkInterval = setInterval(() => {
+      this.checkReminders();
+    }, intervalMs);
+  }
+
+  stopChecking() {
+    if (this.checkInterval) {
+      clearInterval(this.checkInterval);
+      this.checkInterval = null;
+    }
+  }
+
+  checkReminders() {
+    const tasks = this.store.getAllCached('tasks');
+    const now = Date.now();
+
+    for (const task of tasks) {
+      if (task.completed) continue;
+      if (task.reminderTimestamp && task.reminderTimestamp <= now) {
+        if (!this.notifiedTaskIds.has(task.id)) {
+          this.notifiedTaskIds.add(task.id);
+          this.triggerAlert(task);
+        }
+      }
+    }
+  }
+
+  triggerAlert(task) {
+    if ('Notification' in globalThis && globalThis.Notification.permission === 'granted') {
+      new globalThis.Notification('Cognify Reminder', {
+        body: task.title,
+        icon: 'icon.png'
+      });
+    }
+    this.playAudioAlert();
+  }
+
+  playAudioAlert() {
+    try {
+      const AudioCtx = globalThis.AudioContext || globalThis.webkitAudioContext;
+      if (!AudioCtx) return;
+
+      if (!this.audioContext) {
+        this.audioContext = new AudioCtx();
+      }
+
+      const ctx = this.audioContext;
+      if (ctx.state === 'suspended') {
+        ctx.resume();
+      }
+
+      const osc = ctx.createOscillator();
+      const gainNode = ctx.createGain();
+
+      osc.connect(gainNode);
+      gainNode.connect(ctx.destination);
+
+      osc.type = 'sine';
+      osc.frequency.setValueAtTime(880, ctx.currentTime);
+
+      gainNode.gain.setValueAtTime(0, ctx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.3, ctx.currentTime + 0.05);
+      gainNode.gain.setValueAtTime(0.3, ctx.currentTime + 0.15);
+      gainNode.gain.linearRampToValueAtTime(0, ctx.currentTime + 0.2);
+
+      osc.start(ctx.currentTime);
+      osc.stop(ctx.currentTime + 0.25);
+    } catch (e) {
+      console.error('Audio alert failed:', e);
+    }
+  }
+}

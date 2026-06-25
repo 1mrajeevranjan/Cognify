@@ -1,8 +1,10 @@
 import { TaskStore } from './store.js';
 import { TodayView, OnboardingView, SettingsView, UpcomingView } from './components/views.js';
 import { QuickEntry } from './components/quickentry.js';
+import { Notifier } from './utils.js';
 
 export const store = new TaskStore();
+export const notifier = new Notifier(store);
 let appInitialized = false;
 
 // Helper to open Quick Entry overlay
@@ -172,6 +174,10 @@ async function initApp() {
     if ('serviceWorker' in navigator) {
       navigator.serviceWorker.register('sw.js').catch(err => console.error('SW registration failed:', err));
     }
+
+    // 8. Start local reminder checking loop
+    notifier.startChecking(5000);
+    notifier.requestPermission().catch(err => console.error('SW permission request failed:', err));
   } catch (err) {
     console.error('App failed to initialize:', err);
   }
