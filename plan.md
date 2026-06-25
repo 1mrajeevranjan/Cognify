@@ -30,11 +30,11 @@
 - Consumes: None
 - Produces: Base HTML layout, layout logic, testing suite, package definitions, and CSS Custom Properties for colors, spacing, and font sizes.
 
-- [ ] **Step 1: Create package.json** containing npm scripts: `dev` (runs a simple local HTTP server) and `test` (runs `node tests.js`).
-- [ ] **Step 2: Create index.html template** with links to Outfit/Inter fonts, CSS styles, a loading splash overlay (fading out after boot), and a root layout structure (sidebar container and main view container).
-- [ ] **Step 3: Create css/app.css** containing HSL variables for background, foreground, primary (blue-indigo accent), sidebar backgrounds, thin borders, and spacing scales. Include light and dark mode mappings. Use flat gray list structures, thin dividers, and hide sidebar on mobile (<768px).
-- [ ] **Step 4: Create tests.js** as a simple assert script with native `assert` to verify structural layout, DOM variables, and mock environments.
-- [ ] **Step 5: Run verification and commit** (`WIP: Task 1 - Setup layout, unified CSS, package.json, and tests runner`).
+- [x] **Step 1: Create package.json** containing npm scripts: `dev` (runs a simple local HTTP server) and `test` (runs `node tests.js`).
+- [x] **Step 2: Create index.html template** with links to Outfit/Inter fonts, CSS styles, a loading splash overlay (fading out after boot), and a root layout structure (sidebar container and main view container).
+- [x] **Step 3: Create css/app.css** containing HSL variables for background, foreground, primary (blue-indigo accent), sidebar backgrounds, thin borders, and spacing scales. Include light and dark mode mappings. Use flat gray list structures, thin dividers, and hide sidebar on mobile (<768px).
+- [x] **Step 4: Create tests.js** as a simple assert script with native `assert` to verify structural layout, DOM variables, and mock environments.
+- [x] **Step 5: Run verification and commit** (`WIP: Task 1 - Setup layout, unified CSS, package.json, and tests runner`).
 
 ---
 
@@ -48,11 +48,11 @@
 - Consumes: None
 - Produces: `TaskStore` class implementing generic database operations: `get(storeName, id)`, `getAll(storeName)`, `put(storeName, data)`, `delete(storeName, id)`, and `subscribe(storeName, callback)` to listen for changes.
 
-- [ ] **Step 1: Implement Store class in src/store.js** with IndexedDB initialization. Schema includes `tasks` (id, title, notes, completed, dueDate, startDate, priority [P1-P3], checklistItems [JSON array of {id, title, completed}], tags [array], createdAt, updatedAt), `projects` (id, name, areaId, status, createdAt), `areas` (id, name, icon, createdAt), and `settings` (key, value).
-- [ ] **Step 2: Implement synchronous in-memory state caching** in `store.js` for instant UI reads, updating the cache synchronously and saving to IndexedDB asynchronously in the background.
-- [ ] **Step 3: Implement subscription pattern** in `store.js` so components can listen to changes per store.
-- [ ] **Step 4: Write tests in tests.js** asserting that adding, updating, and deleting tasks updates the cache and database. Add tests for transaction recovery.
-- [ ] **Step 5: Run tests.js, verify all tests pass, and commit** (`WIP: Task 2 - Implement reactive cached TaskStore with IndexedDB persistence`).
+- [x] **Step 1: Implement Store class in src/store.js** with IndexedDB initialization. Schema includes `tasks` (id, title, notes, completed, dueDate, startDate, priority [P1-P3], checklistItems [JSON array of {id, title, completed}], tags [array], createdAt, updatedAt), `projects` (id, name, areaId, status, createdAt), `areas` (id, name, icon, createdAt), and `settings` (key, value).
+- [x] **Step 2: Implement synchronous in-memory state caching** in `store.js` for instant UI reads, updating the cache synchronously and saving to IndexedDB asynchronously in the background.
+- [x] **Step 3: Implement subscription pattern** in `store.js` so components can listen to changes per store.
+- [x] **Step 4: Write tests in tests.js** asserting that adding, updating, and deleting tasks updates the cache and database. Add tests for transaction recovery.
+- [x] **Step 5: Run tests.js, verify all tests pass, and commit** (`WIP: Task 2 - Implement reactive cached TaskStore with IndexedDB persistence`).
 
 ---
 
@@ -67,12 +67,12 @@
 - Consumes: `TaskStore` from `src/store.js`
 - Produces: Route switching functionality and UI update trigger for sidebar links (`Inbox`, `Today`, `Upcoming`, `Someday`, `Logbook`, `Projects`, `Areas`), plus development seeding hook.
 
-- [ ] **Step 1: Implement router in src/app.js** that listens to `hashchange` events and maps routes to views.
-- [ ] **Step 2: Implement boot handling in src/app.js** that waits for IndexedDB initialization. If query parameter `?seed=true` is present, populate the database with mock tasks, projects, and areas automatically.
-- [ ] **Step 3: Intercept routing in boot** checking if the settings store has `onboarded` flag, routing to `#onboarding` if false, and fading out the splash screen overlay once ready.
-- [ ] **Step 4: Build Sidebar Component in src/components/sidebar.js** (and template in index.html) with active state indicators and brand logo "Cognify".
-- [ ] **Step 5: Add routing tests in tests.js** asserting that hash changes trigger route handler and update active view classes.
-- [ ] **Step 6: Verify routing works, then commit** (`WIP: Task 3 - Implement routing, boot interception, and sidebar`).
+- [x] **Step 1: Implement router in src/app.js** that listens to `hashchange` events and maps routes to views.
+- [x] **Step 2: Implement boot handling in src/app.js** that waits for IndexedDB initialization. If query parameter `?seed=true` is present, populate the database with mock tasks, projects, and areas automatically.
+- [x] **Step 3: Intercept routing in boot** checking if the settings store has `onboarded` flag, routing to `#onboarding` if false, and fading out the splash screen overlay once ready.
+- [x] **Step 4: Build Sidebar Component in src/components/sidebar.js** (and template in index.html) with active state indicators and brand logo "Cognify".
+- [x] **Step 5: Add routing tests in tests.js** asserting that hash changes trigger route handler and update active view classes.
+- [x] **Step 6: Verify routing works, then commit** (`WIP: Task 3 - Implement routing, boot interception, and sidebar`).
 
 ---
 
@@ -87,10 +87,10 @@
 - Consumes: `TaskStore` from `src/store.js`
 - Produces: Rendered task list, complete/uncomplete transitions, and inline/modal details panel.
 
-- [ ] **Step 1: Write UI tests in tests.js** verifying task completion logic: circle checkbox click triggers 800ms hold state, then plays fade-out transition.
-- [ ] **Step 2: Implement TaskList and TaskItem render logic** in `src/components/item.js`. Tasks render as list rows with tags, date indicators, and priority. Render empty state placeholders with warm copy and call-to-actions when lists are empty.
-- [ ] **Step 3: Implement detail inspector panel** expanding inline on desktop (>=768px) and sliding up as a mobile drawer (<768px). Details edit title, notes, priority, checklistItems array, project, dates, and tags.
-- [ ] **Step 4: Verify visually and via tests, then commit** (`WIP: Task 4 - Build Things-like TaskList and TaskItem components with micro-animations`).
+- [x] **Step 1: Write UI tests in tests.js** verifying task completion logic: circle checkbox click triggers 800ms hold state, then plays fade-out transition.
+- [x] **Step 2: Implement TaskList and TaskItem render logic** in `src/components/item.js`. Tasks render as list rows with tags, date indicators, and priority. Render empty state placeholders with warm copy and call-to-actions when lists are empty.
+- [x] **Step 3: Implement detail inspector panel** expanding inline on desktop (>=768px) and sliding up as a mobile drawer (<768px). Details edit title, notes, priority, checklistItems array, project, dates, and tags.
+- [x] **Step 4: Verify visually and via tests, then commit** (`WIP: Task 4 - Build Things-like TaskList and TaskItem components with micro-animations`).
 
 ---
 
@@ -105,11 +105,11 @@
 - Consumes: `TaskStore` from `src/store.js`
 - Produces: `parseNaturalLanguage(text)` returning `{ title, dueDate, tags, priority }`, and `QuickEntry` overlay trigger.
 
-- [ ] **Step 1: Download chrono-node ESM pre-bundled version** and save it locally to `lib/chrono.js`.
-- [ ] **Step 2: Implement parseNaturalLanguage in src/utils.js** utilizing chrono-node to extract relative dates, tags (`#tag`), and priorities.
-- [ ] **Step 3: Implement QuickEntry overlay in src/components/quickentry.js** triggered by global keyboard shortcut `Ctrl + Space`.
-- [ ] **Step 4: Add live-parsing preview inside QuickEntry** showing real-time extracted date and tag chips as the user types.
-- [ ] **Step 5: Write parsing assertions in tests.js and commit** (`WIP: Task 5 - Build Quick Entry with Natural Language Processing`).
+- [x] **Step 1: Download chrono-node ESM pre-bundled version** and save it locally to `lib/chrono.js`.
+- [x] **Step 2: Implement parseNaturalLanguage in src/utils.js** utilizing chrono-node to extract relative dates, tags (`#tag`), and priorities.
+- [x] **Step 3: Implement QuickEntry overlay in src/components/quickentry.js** triggered by global keyboard shortcut `Ctrl + Space`.
+- [x] **Step 4: Add live-parsing preview inside QuickEntry** showing real-time extracted date and tag chips as the user types.
+- [x] **Step 5: Write parsing assertions in tests.js and commit** (`WIP: Task 5 - Build Quick Entry with Natural Language Processing`).
 
 ---
 
@@ -123,10 +123,10 @@
 - Consumes: `TaskStore`
 - Produces: Chronological schedule view of tasks grouped by due date with scheduling controls.
 
-- [ ] **Step 1: Implement UpcomingView in src/components/views.js** rendering tasks grouped by date.
-- [ ] **Step 2: Build rescheduling quick actions** (Today, Tomorrow, Next Week, Someday) or simple reordering handlers.
-- [ ] **Step 3: Add drag-and-drop or visual button handlers** to reallocate tasks between dates.
-- [ ] **Step 4: Write tests for schedule grouping and scheduling controls in tests.js and commit** (`WIP: Task 6 - Build Upcoming Schedule and triage views`).
+- [x] **Step 1: Implement UpcomingView in src/components/views.js** rendering tasks grouped by date.
+- [x] **Step 2: Build rescheduling quick actions** (Today, Tomorrow, Next Week, Someday) or simple reordering handlers.
+- [x] **Step 3: Add drag-and-drop or visual button handlers** to reallocate tasks between dates.
+- [x] **Step 4: Write tests for schedule grouping and scheduling controls in tests.js and commit** (`WIP: Task 6 - Build Upcoming Schedule and triage views`).
 
 ---
 
