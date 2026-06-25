@@ -1,8 +1,35 @@
 import { TaskStore } from './store.js';
 import { TodayView, OnboardingView, SettingsView } from './components/views.js';
+import { QuickEntry } from './components/quickentry.js';
 
 export const store = new TaskStore();
 let appInitialized = false;
+
+// Helper to open Quick Entry overlay
+function openQuickEntry() {
+  // Avoid duplicate overlay
+  if (document.querySelector('.quick-entry-overlay')) return;
+  
+  const entry = QuickEntry({
+    onSave: async (parsedTask) => {
+      const newTask = {
+        id: `t-${Date.now()}`,
+        completed: false,
+        createdAt: Date.now(),
+        updatedAt: Date.now(),
+        checklistItems: [],
+        ...parsedTask
+      };
+      await store.put('tasks', newTask);
+    }
+  });
+  
+  if (document.body && document.body.appendChild) {
+    document.body.appendChild(entry);
+    const input = entry.querySelector('.quick-entry-input');
+    if (input && input.focus) input.focus();
+  }
+}
 
 // Simple view templates (Task 4 will expand these modularly)
 const views = {
@@ -99,6 +126,23 @@ async function initApp() {
     if (splash) {
       splash.classList.add('hidden');
     }
+
+    // 5. Global hotkey for Quick Entry (Ctrl + Space)
+    window.addEventListener('keydown', (e) => {
+      if (e.ctrlKey && e.code === 'Space') {
+        e.preventDefault();
+        openQuickEntry();
+      }
+    });
+
+    // 6. Global event delegator for "Capture a new task" buttons
+    if (document.addEventListener) {
+      document.addEventListener('click', (e) => {
+        if (e.target && e.target.classList && e.target.classList.contains('empty-cta-btn')) {
+          openQuickEntry();
+        }
+      });
+    }
   } catch (err) {
     console.error('App failed to initialize:', err);
   }
@@ -106,4 +150,5 @@ async function initApp() {
 
 // Start boot sequence
 initApp();
+
 

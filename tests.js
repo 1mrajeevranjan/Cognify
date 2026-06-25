@@ -201,6 +201,8 @@ runStoreTests().then(() => {
   return runRoutingTests();
 }).then(() => {
   return runUITests();
+}).then(() => {
+  return runNLPTests();
 }).catch(err => {
   console.error('✗ Tests Failed:', err);
   process.exit(1);
@@ -488,3 +490,72 @@ async function runUITests() {
 
   console.log('✓ All Task 4 UI Component Tests Passed!');
 }
+
+// ==========================================
+// 7. Natural Language Parsing Tests (TDD)
+// ==========================================
+async function runNLPTests() {
+  console.log('Running Task 5 NLP Date Parsing Tests...');
+  const { parseNaturalLanguage } = await import('./src/utils.js');
+  
+  // Test case 1: Today date and tags
+  const res1 = parseNaturalLanguage('Buy milk today #errand #grocery');
+  assert.strictEqual(res1.title, 'Buy milk');
+  const todayStr = new Date().toISOString().split('T')[0];
+  assert.strictEqual(res1.dueDate, todayStr);
+  assert.deepStrictEqual(res1.tags.sort(), ['errand', 'grocery'].sort());
+  assert.strictEqual(res1.priority, null);
+
+  // Test case 2: Tomorrow date, priority and tag
+  const res2 = parseNaturalLanguage('Send weekly report tomorrow !p1 #work');
+  assert.strictEqual(res2.title, 'Send weekly report');
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  assert.strictEqual(res2.dueDate, tomorrowStr);
+  assert.deepStrictEqual(res2.tags, ['work']);
+  assert.strictEqual(res2.priority, 'P1');
+
+  // Test case 3: No date, priority P3, no tag
+  const res3 = parseNaturalLanguage('Fix styling !p3');
+  assert.strictEqual(res3.title, 'Fix styling');
+  assert.strictEqual(res3.dueDate, null);
+  assert.deepStrictEqual(res3.tags, []);
+  assert.strictEqual(res3.priority, 'P3');
+
+  // 4. Test QuickEntry component
+  const { QuickEntry } = await import('./src/components/quickentry.js');
+  let savedTask = null;
+  const quickEntryEl = QuickEntry({
+    onSave: (task) => {
+      savedTask = task;
+    }
+  });
+
+  assert.ok(quickEntryEl, 'QuickEntry should return a DOM element');
+  assert.ok(quickEntryEl.classList.contains('quick-entry-overlay'), 'QuickEntry should have class quick-entry-overlay');
+
+  const input = quickEntryEl.querySelector('.quick-entry-input');
+  assert.ok(input, 'QuickEntry should have an input field');
+
+  const preview = quickEntryEl.querySelector('.quick-entry-preview');
+  assert.ok(preview, 'QuickEntry should have a preview container');
+
+  // Simulate typing input and triggering input event
+  input.value = 'Buy milk today #errand';
+  input.dispatchEvent('input');
+
+  // Verify preview is updated (e.g., has chips for date and tags)
+  const chips = quickEntryEl.querySelectorAll('.preview-chip');
+  assert.ok(chips.length >= 2, 'Preview should render chips for extracted metadata');
+  
+  // Simulate pressing Enter to save
+  input.dispatchEvent('keydown', { key: 'Enter' });
+  assert.ok(savedTask, 'onSave should be called on Enter');
+  assert.strictEqual(savedTask.title, 'Buy milk');
+  assert.deepStrictEqual(savedTask.tags, ['errand']);
+  console.log('✓ QuickEntry component and live-preview verified');
+
+  console.log('✓ All Task 5 NLP Tests Passed!');
+}
+
