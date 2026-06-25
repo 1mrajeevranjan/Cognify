@@ -1,0 +1,13 @@
+{
+  "name": "cognify",
+  "version": "1.0.0",
+  "description": "Things 3-inspired offline-first personal task manager",
+  "main": "src/app.js",
+  "type": "module",
+  "scripts": {
+    "dev": "npx local-web-server --spa index.html",
+    "test": "node tests.js"
+  },
+  "dependencies": {},
+  "devDependencies": {}
+}

@@ -1,0 +1,123 @@
+/* Outfit/Inter font pairing default */
+:root {
+  --font-sans: 'Outfit', 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+  
+  /* Color Tokens - Default Light Mode (Things 3 Calm Palette) */
+  --background: hsl(0, 0%, 98%);
+  --sidebar-background: hsl(0, 0%, 96%);
+  --foreground: hsl(0, 0%, 15%);
+  --foreground-muted: hsl(0, 0%, 45%);
+  --accent: #2b56f5; /* Things-like Blue Accent */
+  --accent-muted: hsl(227, 91%, 96%);
+  --border: hsl(0, 0%, 90%);
+  --border-focus: hsl(227, 91%, 70%);
+  --surface: hsl(0, 0%, 100%);
+  --selection: hsl(227, 91%, 94%);
+  --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+
+  --spacing-xs: 4px;
+  --spacing-sm: 8px;
+  --spacing-md: 16px;
+  --spacing-lg: 24px;
+  --spacing-xl: 32px;
+  --sidebar-width: 250px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: hsl(0, 0%, 10%);
+    --sidebar-background: hsl(0, 0%, 7%);
+    --foreground: hsl(0, 0%, 90%);
+    --foreground-muted: hsl(0, 0%, 60%);
+    --border: hsl(0, 0%, 18%);
+    --border-focus: hsl(227, 91%, 60%);
+    --surface: hsl(0, 0%, 13%);
+    --selection: hsl(227, 30%, 20%);
+    --accent-muted: hsl(227, 30%, 18%);
+  }
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+body {
+  font-family: var(--font-sans);
+  background-color: var(--background);
+  color: var(--foreground);
+  overflow-x: hidden;
+  line-height: 1.5;
+}
+
+/* Splash Screen Overlay */
+.splash-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background-color: var(--background);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+  transition: opacity 0.4s ease, visibility 0.4s;
+}
+
+.splash-overlay.hidden {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+
+.splash-logo {
+  font-size: 2.5rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin-bottom: var(--spacing-md);
+  letter-spacing: -0.03em;
+}
+
+.splash-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Base Layout Structure */
+.app-container {
+  display: flex;
+  min-height: 100vh;
+  width: 100vw;
+}
+
+.sidebar-container {
+  width: var(--sidebar-width);
+  background-color: var(--sidebar-background);
+  border-right: 1px solid var(--border);
+  padding: var(--spacing-lg);
+  flex-shrink: 0;
+}
+
+.main-content {
+  flex-grow: 1;
+  background-color: var(--background);
+  padding: var(--spacing-xl);
+  overflow-y: auto;
+}
+
+@media (max-width: 767px) {
+  .sidebar-container {
+    display: none;
+  }
+}
