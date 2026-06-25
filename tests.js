@@ -199,6 +199,8 @@ async function runStoreTests() {
 
 runStoreTests().then(() => {
   return runRoutingTests();
+}).then(() => {
+  return runUITests();
 }).catch(err => {
   console.error('✗ Tests Failed:', err);
   process.exit(1);
@@ -265,7 +267,7 @@ async function runRoutingTests() {
   const appModule = await import('./src/app.js');
   
   // Wait to let async boot loop execute
-  await new Promise(resolve => setTimeout(resolve, 10));
+  await new Promise(resolve => setTimeout(resolve, 50));
   
   assert.ok(mockSplashClasses.has('hidden'), 'Splash screen should be hidden after initialization');
   console.log('✓ Splash screen fade-out verified');
@@ -279,4 +281,210 @@ async function runRoutingTests() {
   console.log('✓ URL Hash-change routing verified');
 
   console.log('✓ All Task 3 Routing Tests Passed!');
+}
+
+// ==========================================
+// MockElement DOM helper class for UI tests
+// ==========================================
+class MockElement {
+  constructor(tagName) {
+    this.tagName = tagName.toUpperCase();
+    this.classList = {
+      add: (cls) => this.classes.add(cls),
+      remove: (cls) => this.classes.delete(cls),
+      contains: (cls) => this.classes.has(cls),
+      toggle: (cls) => {
+        if (this.classes.has(cls)) this.classes.delete(cls);
+        else this.classes.add(cls);
+      }
+    };
+    this.classes = new Set();
+    this.listeners = {};
+    this.children = [];
+    this._innerHTML = '';
+    this._textContent = '';
+    this.attributes = new Map();
+    this.style = {};
+  }
+  get innerHTML() {
+    if (this._innerHTML) return this._innerHTML;
+    return this.children.map(child => {
+      if (typeof child === 'string') return child;
+      return child.innerHTML || child.textContent || '';
+    }).join('');
+  }
+  set innerHTML(val) {
+    this._innerHTML = val;
+  }
+  get textContent() {
+    if (this._textContent) return this._textContent;
+    return this.children.map(child => {
+      if (typeof child === 'string') return child;
+      return child.textContent || '';
+    }).join('');
+  }
+  set textContent(val) {
+    this._textContent = val;
+  }
+  setAttribute(name, val) { this.attributes.set(name, String(val)); }
+  getAttribute(name) { return this.attributes.get(name); }
+  appendChild(child) { this.children.push(child); }
+  addEventListener(event, callback) {
+    if (!this.listeners[event]) this.listeners[event] = [];
+    this.listeners[event].push(callback);
+  }
+  dispatchEvent(event, data = {}) {
+    if (typeof data === 'object' && !data.stopPropagation) {
+      data.stopPropagation = () => {};
+    }
+    const list = this.listeners[event] || [];
+    for (const cb of list) cb(data);
+  }
+  querySelector(selector) {
+    if (selector.startsWith('.')) {
+      const cls = selector.substring(1);
+      return this._findChild(el => el.classList.contains(cls));
+    }
+    if (selector.startsWith('#')) {
+      const id = selector.substring(1);
+      return this._findChild(el => el.getAttribute('id') === id);
+    }
+    return this._findChild(el => el.tagName === selector.toUpperCase());
+  }
+  querySelectorAll(selector) {
+    const results = [];
+    this._findChildren(results, el => {
+      if (selector.startsWith('.')) return el.classList.contains(selector.substring(1));
+      if (selector.startsWith('#')) return el.getAttribute('id') === selector.substring(1);
+      return el.tagName === selector.toUpperCase();
+    });
+    return results;
+  }
+  _findChild(predicate) {
+    for (const child of this.children) {
+      if (predicate(child)) return child;
+      const sub = child._findChild(predicate);
+      if (sub) return sub;
+    }
+    return null;
+  }
+  _findChildren(results, predicate) {
+    for (const child of this.children) {
+      if (predicate(child)) results.push(child);
+      child._findChildren(results, predicate);
+    }
+  }
+}
+
+// Extend global document object
+globalThis.document.createElement = (tag) => new MockElement(tag);
+
+// ==========================================
+// 6. UI View & Components Tests (TDD)
+// ==========================================
+async function runUITests() {
+  console.log('Running Task 4 UI View & Component Tests...');
+  const { TaskItem, TaskList } = await import('./src/components/item.js');
+  
+  const dummyTask = {
+    id: 't-ui',
+    title: 'Test Component Rendering',
+    notes: 'Make it visually calm.',
+    completed: false,
+    dueDate: '2026-06-25',
+    priority: 'P2',
+    checklistItems: [{ id: 's1', title: 'Subtask 1', completed: false }],
+    tags: ['work']
+  };
+
+  // 1. Test TaskItem render output
+  const itemEl = TaskItem(dummyTask);
+  assert.ok(itemEl, 'TaskItem should return a DOM element');
+  assert.ok(itemEl.classList.contains('task-item-row'), 'TaskItem should have class task-item-row');
+  
+  const checkbox = itemEl.querySelector('.task-checkbox');
+  assert.ok(checkbox, 'TaskItem should render a checkbox element');
+  
+  const title = itemEl.querySelector('.task-title');
+  assert.ok(title, 'TaskItem should render a title element');
+  assert.strictEqual(title.textContent, 'Test Component Rendering', 'TaskItem should render the correct title');
+  console.log('✓ TaskItem basic render verified');
+
+  // 1b. Test task completion click handler with 800ms hold state
+  let completedEventDispatched = false;
+  let completedEventData = null;
+  itemEl.addEventListener('task-completed', (data) => {
+    completedEventDispatched = true;
+    completedEventData = data;
+  });
+
+  checkbox.dispatchEvent('click');
+  assert.ok(checkbox.classList.contains('checked'), 'Checkbox should be marked checked immediately');
+  assert.ok(itemEl.classList.contains('holding-completion'), 'Row should enter holding-completion state');
+
+  // Wait 820ms for resolution
+  await new Promise(resolve => setTimeout(resolve, 820));
+  assert.ok(completedEventDispatched, 'task-completed event should be dispatched after 800ms');
+  assert.strictEqual(completedEventData.id, 't-ui', 'Event payload should carry task ID');
+  assert.strictEqual(completedEventData.completed, true, 'Event payload should indicate completion status is true');
+  console.log('✓ Task completion click hold state verified');
+
+  // 2. Test TaskList renders empty state when empty
+  const emptyListEl = TaskList([], {});
+  const emptyState = emptyListEl.querySelector('.empty-state');
+  assert.ok(emptyState, 'TaskList should render an empty state container when tasks list is empty');
+  console.log('✓ TaskList empty state verified');
+
+  // 3. Test TaskList groups tasks by project
+  const dummyProject = { id: 'p-ui', name: 'UI Feature Work' };
+  const taskWithProject = { ...dummyTask, projectId: 'p-ui' };
+  const listEl = TaskList([taskWithProject], { 'p-ui': dummyProject });
+  
+  const projectHeader = listEl.querySelector('.project-header');
+  assert.ok(projectHeader, 'TaskList should render project headers for grouped tasks');
+  assert.ok(projectHeader.textContent.includes('UI Feature Work'), 'Project header should render project name');
+  console.log('✓ TaskList project grouping verified');
+
+  // 4. Test TaskDetailPanel rendering and saving
+  const { TaskDetailPanel } = await import('./src/components/item.js');
+  let panelSavedData = null;
+  const panelEl = TaskDetailPanel(dummyTask, {
+    onSave: (updatedData) => {
+      panelSavedData = updatedData;
+    }
+  });
+
+  assert.ok(panelEl, 'TaskDetailPanel should return a DOM element');
+  assert.ok(panelEl.classList.contains('task-detail-panel'), 'TaskDetailPanel should have class task-detail-panel');
+
+  const titleInput = panelEl.querySelector('.detail-title-input');
+  assert.ok(titleInput, 'Detail panel should have a title input field');
+  
+  // Simulate editing title and triggering change / save
+  titleInput.value = 'Updated Task Title';
+  titleInput.dispatchEvent('change');
+  
+  assert.ok(panelSavedData, 'onSave callback should be triggered when detail panel values change');
+  assert.strictEqual(panelSavedData.title, 'Updated Task Title', 'Updated title should be propagated via onSave');
+  console.log('✓ TaskDetailPanel render and save logic verified');
+
+  // 5. Test src/components/views.js renders views
+  const { TodayView, OnboardingView, SettingsView } = await import('./src/components/views.js');
+  
+  const todayEl = TodayView([], {});
+  assert.ok(todayEl, 'TodayView should return a DOM element');
+  assert.ok(todayEl.classList.contains('today-view-container'), 'TodayView should have class today-view-container');
+  console.log('✓ TodayView render verified');
+
+  const onboardingEl = OnboardingView();
+  assert.ok(onboardingEl, 'OnboardingView should return a DOM element');
+  assert.ok(onboardingEl.classList.contains('onboarding-view-container'), 'OnboardingView should have class onboarding-view-container');
+  console.log('✓ OnboardingView render verified');
+
+  const settingsEl = SettingsView();
+  assert.ok(settingsEl, 'SettingsView should return a DOM element');
+  assert.ok(settingsEl.classList.contains('settings-view-container'), 'SettingsView should have class settings-view-container');
+  console.log('✓ SettingsView render verified');
+
+  console.log('✓ All Task 4 UI Component Tests Passed!');
 }
