@@ -338,5 +338,78 @@ body {
   background-color: var(--selection);
 }
 
+/* Task Item Metadata Chips */
+.task-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  margin-top: var(--spacing-xs);
+}
+
+.meta-priority,
+.meta-date,
+.meta-tag {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+}
+
+.meta-priority {
+  background-color: hsl(0, 85%, 95%);
+  color: hsl(0, 85%, 45%);
+}
+
+.priority-p1 {
+  background-color: hsl(0, 85%, 90%);
+  color: hsl(0, 85%, 40%);
+  font-weight: 600;
+}
+
+.priority-p2 {
+  background-color: hsl(35, 90%, 92%);
+  color: hsl(35, 90%, 40%);
+}
+
+.priority-p3 {
+  background-color: hsl(210, 85%, 95%);
+  color: hsl(210, 85%, 45%);
+}
+
+.meta-date {
+  background-color: var(--accent-muted);
+  color: var(--accent);
+}
+
+.meta-tag {
+  background-color: hsl(0, 0%, 92%);
+  color: var(--foreground-muted);
+}
+
+@media (prefers-color-scheme: dark) {
+  .meta-priority.priority-p1 {
+    background-color: hsl(0, 50%, 20%);
+    color: hsl(0, 85%, 65%);
+  }
+  
+  .meta-priority.priority-p2 {
+    background-color: hsl(35, 50%, 18%);
+    color: hsl(35, 85%, 60%);
+  }
+
+  .meta-priority.priority-p3 {
+    background-color: hsl(210, 40%, 20%);
+    color: hsl(210, 80%, 65%);
+  }
+
+  .meta-tag {
+    background-color: hsl(0, 0%, 22%);
+    color: var(--foreground);
+  }
+}
+
 
 

@@ -72,7 +72,10 @@ export function TaskItem(task) {
     const holdTimer = setTimeout(() => {
       // Trigger update complete
       el.classList.add('completed');
-      el.dispatchEvent('task-completed', { id: task.id, completed: !task.completed });
+      el.dispatchEvent(new CustomEvent('task-completed', {
+        detail: { id: task.id, completed: !task.completed },
+        bubbles: true
+      }));
     }, 800);
     
     el.holdTimer = holdTimer;
@@ -80,7 +83,10 @@ export function TaskItem(task) {
 
   // Click on the row itself to select/inspect the task
   el.addEventListener('click', () => {
-    el.dispatchEvent('task-selected', { id: task.id, task });
+    el.dispatchEvent(new CustomEvent('task-selected', {
+      detail: { id: task.id, task },
+      bubbles: true
+    }));
   });
 
   // Reschedule button & dropdown popover
@@ -102,7 +108,10 @@ export function TaskItem(task) {
   optToday.addEventListener('click', (event) => {
     event.stopPropagation();
     const todayStr = new Date().toISOString().split('T')[0];
-    el.dispatchEvent('task-updated', { ...task, dueDate: todayStr });
+    el.dispatchEvent(new CustomEvent('task-updated', {
+      detail: { ...task, dueDate: todayStr },
+      bubbles: true
+    }));
     popover.classList.remove('show');
   });
   popover.appendChild(optToday);
@@ -115,7 +124,10 @@ export function TaskItem(task) {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     const tomorrowStr = tomorrow.toISOString().split('T')[0];
-    el.dispatchEvent('task-updated', { ...task, dueDate: tomorrowStr });
+    el.dispatchEvent(new CustomEvent('task-updated', {
+      detail: { ...task, dueDate: tomorrowStr },
+      bubbles: true
+    }));
     popover.classList.remove('show');
   });
   popover.appendChild(optTomorrow);
@@ -128,7 +140,10 @@ export function TaskItem(task) {
     const nextWeek = new Date();
     nextWeek.setDate(nextWeek.getDate() + 7);
     const nextWeekStr = nextWeek.toISOString().split('T')[0];
-    el.dispatchEvent('task-updated', { ...task, dueDate: nextWeekStr });
+    el.dispatchEvent(new CustomEvent('task-updated', {
+      detail: { ...task, dueDate: nextWeekStr },
+      bubbles: true
+    }));
     popover.classList.remove('show');
   });
   popover.appendChild(optNextWeek);
@@ -138,7 +153,10 @@ export function TaskItem(task) {
   optSomeday.textContent = 'Someday';
   optSomeday.addEventListener('click', (event) => {
     event.stopPropagation();
-    el.dispatchEvent('task-updated', { ...task, dueDate: null });
+    el.dispatchEvent(new CustomEvent('task-updated', {
+      detail: { ...task, dueDate: null },
+      bubbles: true
+    }));
     popover.classList.remove('show');
   });
   popover.appendChild(optSomeday);

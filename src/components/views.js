@@ -25,10 +25,13 @@ function createSplitLayoutView(viewClass, headingText, tasks, projects) {
     detailPane.innerHTML = '';
     detailPane.classList.add('open');
 
-    const task = e.task;
+    const task = e.detail.task;
     const detailPanel = TaskDetailPanel(task, {
       onSave: (updatedTask) => {
-        el.dispatchEvent('task-updated', updatedTask);
+        el.dispatchEvent(new CustomEvent('task-updated', {
+          detail: updatedTask,
+          bubbles: true
+        }));
       }
     });
 
@@ -165,10 +168,13 @@ export function UpcomingView(tasks, projects = {}) {
     detailPane.innerHTML = '';
     detailPane.classList.add('open');
 
-    const task = e.task;
+    const task = e.detail.task;
     const detailPanel = TaskDetailPanel(task, {
       onSave: (updatedTask) => {
-        el.dispatchEvent('task-updated', updatedTask);
+        el.dispatchEvent(new CustomEvent('task-updated', {
+          detail: updatedTask,
+          bubbles: true
+        }));
       }
     });
 

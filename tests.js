@@ -30,6 +30,9 @@ try {
   assert.ok(css.includes('--background'), 'css/app.css must define --background variable');
   assert.ok(css.includes('--foreground'), 'css/app.css must define --foreground variable');
   assert.ok(css.includes('--accent'), 'css/app.css must define --accent variable');
+  assert.ok(css.includes('.meta-priority'), 'css/app.css must define .meta-priority');
+  assert.ok(css.includes('.meta-date'), 'css/app.css must define .meta-date');
+  assert.ok(css.includes('.meta-tag'), 'css/app.css must define .meta-tag');
   
   console.log('✓ CSS Design Tokens Verification Passed');
 } catch (err) {
@@ -288,6 +291,20 @@ async function runRoutingTests() {
 // ==========================================
 // MockElement DOM helper class for UI tests
 // ==========================================
+class MockCustomEvent {
+  constructor(type, init = {}) {
+    this.type = type;
+    this.detail = init.detail || null;
+    this.bubbles = init.bubbles || false;
+    this.target = null;
+    this._propagationStopped = false;
+  }
+  stopPropagation() {
+    this._propagationStopped = true;
+  }
+}
+globalThis.CustomEvent = MockCustomEvent;
+
 class MockElement {
   constructor(tagName) {
     this.tagName = tagName.toUpperCase();
@@ -341,20 +358,34 @@ class MockElement {
     this.listeners[event].push(callback);
   }
   dispatchEvent(event, data = {}) {
-    let stopped = false;
-    if (typeof data === 'object') {
-      if (!data.stopPropagation) {
-        data.stopPropagation = () => { stopped = true; };
-      }
-      if (!data.target) {
-        data.target = this;
-      }
+    let eventObj;
+    let eventType;
+    if (typeof event === 'string') {
+      // Convert legacy string events to CustomEvent-like shapes
+      eventType = event;
+      eventObj = {
+        type: event,
+        detail: data,
+        bubbles: true,
+        target: this,
+        _propagationStopped: false,
+        stopPropagation() { this._propagationStopped = true; }
+      };
+      Object.assign(eventObj, data);
+    } else {
+      eventType = event.type;
+      eventObj = event;
+      if (!eventObj.target) eventObj.target = this;
     }
-    const list = this.listeners[event] || [];
-    for (const cb of list) cb(data);
+
+    const list = this.listeners[eventType] || [];
+    for (const cb of list) cb(eventObj);
     
-    if (!stopped && this.parentNode && typeof this.parentNode.dispatchEvent === 'function') {
-      this.parentNode.dispatchEvent(event, data);
+    const propagationStopped = eventObj._propagationStopped;
+    const bubbles = eventObj.bubbles;
+
+    if (!propagationStopped && bubbles && this.parentNode && typeof this.parentNode.dispatchEvent === 'function') {
+      this.parentNode.dispatchEvent(eventObj);
     }
   }
   querySelector(selector) {
@@ -428,11 +459,9 @@ async function runUITests() {
   console.log('✓ TaskItem basic render verified');
 
   // 1b. Test task completion click handler with 800ms hold state
-  let completedEventDispatched = false;
-  let completedEventData = null;
-  itemEl.addEventListener('task-completed', (data) => {
-    completedEventDispatched = true;
-    completedEventData = data;
+  let completedEvent = null;
+  itemEl.addEventListener('task-completed', (e) => {
+    completedEvent = e;
   });
 
   checkbox.dispatchEvent('click');
@@ -441,22 +470,22 @@ async function runUITests() {
 
   // Wait 820ms for resolution
   await new Promise(resolve => setTimeout(resolve, 820));
-  assert.ok(completedEventDispatched, 'task-completed event should be dispatched after 800ms');
-  assert.strictEqual(completedEventData.id, 't-ui', 'Event payload should carry task ID');
-  assert.strictEqual(completedEventData.completed, true, 'Event payload should indicate completion status is true');
+  assert.ok(completedEvent, 'task-completed event should be dispatched after 800ms');
+  assert.ok(completedEvent instanceof globalThis.CustomEvent, 'task-completed event should be a CustomEvent');
+  assert.strictEqual(completedEvent.detail.id, 't-ui', 'Event payload should carry task ID');
+  assert.strictEqual(completedEvent.detail.completed, true, 'Event payload should indicate completion status is true');
   console.log('✓ Task completion click hold state verified');
 
   // 1c. Test task selection/click handler to open detail drawer
-  let selectedEventDispatched = false;
-  let selectedEventData = null;
-  itemEl.addEventListener('task-selected', (data) => {
-    selectedEventDispatched = true;
-    selectedEventData = data;
+  let selectedEvent = null;
+  itemEl.addEventListener('task-selected', (e) => {
+    selectedEvent = e;
   });
 
   itemEl.dispatchEvent('click');
-  assert.ok(selectedEventDispatched, 'task-selected event should be dispatched when task row is clicked');
-  assert.strictEqual(selectedEventData.id, 't-ui', 'Selected event payload should carry task ID');
+  assert.ok(selectedEvent, 'task-selected event should be dispatched when task row is clicked');
+  assert.ok(selectedEvent instanceof globalThis.CustomEvent, 'task-selected event should be a CustomEvent');
+  assert.strictEqual(selectedEvent.detail.id, 't-ui', 'Selected event payload should carry task ID');
   console.log('✓ Task item row selection click verified');
 
   // 2. Test TaskList renders empty state when empty
