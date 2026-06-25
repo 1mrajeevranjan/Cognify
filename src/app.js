@@ -167,6 +167,11 @@ async function initApp() {
         }
       });
     }
+
+    // 7. Register Service Worker for offline capability
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('sw.js').catch(err => console.error('SW registration failed:', err));
+    }
   } catch (err) {
     console.error('App failed to initialize:', err);
   }

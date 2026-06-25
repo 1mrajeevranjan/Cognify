@@ -2,6 +2,24 @@ import assert from 'node:assert';
 import fs from 'node:fs';
 import path from 'node:path';
 
+// Navigator Mock Setup for Service Worker tests
+let serviceWorkerRegistered = false;
+let serviceWorkerScript = null;
+
+Object.defineProperty(globalThis, 'navigator', {
+  value: {
+    serviceWorker: {
+      register(scriptPath) {
+        serviceWorkerRegistered = true;
+        serviceWorkerScript = scriptPath;
+        return Promise.resolve({ scope: '/' });
+      }
+    }
+  },
+  writable: true,
+  configurable: true
+});
+
 console.log('Running Task 1 Layout & Setup Verification...');
 
 // 1. Verify index.html structure
@@ -206,6 +224,8 @@ runStoreTests().then(() => {
   return runUITests();
 }).then(() => {
   return runNLPTests();
+}).then(() => {
+  return runPWATests();
 }).catch(err => {
   console.error('✗ Tests Failed:', err);
   process.exit(1);
@@ -680,5 +700,35 @@ async function runNLPTests() {
   console.log('✓ QuickEntry component and live-preview verified');
 
   console.log('✓ All Task 5 NLP Tests Passed!');
+}
+
+// ==========================================
+// 8. PWA & Offline Caching Tests (TDD)
+// ==========================================
+async function runPWATests() {
+  console.log('Running Task 7 PWA & Offline Caching Tests...');
+
+  // 1. Verify manifest.json exists and is valid
+  const manifestPath = path.resolve('manifest.json');
+  assert.ok(fs.existsSync(manifestPath), 'manifest.json must exist');
+
+  const manifest = JSON.parse(fs.readFileSync(manifestPath, 'utf8'));
+  assert.ok(manifest.name, 'manifest.json must define a name');
+  assert.ok(manifest.short_name, 'manifest.json must define a short_name');
+  assert.ok(manifest.start_url, 'manifest.json must define a start_url');
+  assert.ok(manifest.display, 'manifest.json must define display mode');
+
+  // 2. Verify sw.js exists and implements service worker lifecycle events
+  const swPath = path.resolve('sw.js');
+  assert.ok(fs.existsSync(swPath), 'sw.js must exist');
+  const swContent = fs.readFileSync(swPath, 'utf8');
+  assert.ok(swContent.includes('install'), 'sw.js must implement install event listener');
+  assert.ok(swContent.includes('fetch'), 'sw.js must implement fetch event listener');
+
+  // 3. Verify service worker was registered on boot
+  assert.ok(serviceWorkerRegistered, 'Service Worker must be registered during boot sequence');
+  assert.strictEqual(serviceWorkerScript, 'sw.js', 'Service worker must register sw.js');
+
+  console.log('✓ All Task 7 PWA Tests Passed!');
 }
 

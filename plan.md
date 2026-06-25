@@ -141,10 +141,10 @@
 - Consumes: All UI assets
 - Produces: Offline caching cache-first fallback policies for app resources.
 
-- [ ] **Step 1: Create sw.js** implementing cache-first lookup and fetch-update strategies for `index.html`, `css/app.css`, `src/app.js`, `src/store.js`, `src/utils.js`, `src/components/*` and `lib/chrono.js`.
-- [ ] **Step 2: Register Service Worker in src/app.js** during app boot with fallback error handling.
-- [ ] **Step 3: Create manifest.json** mapping metadata, colors, and application icon paths for PWA registration.
-- [ ] **Step 4: Verify offline reloading works via Chrome DevTools and commit** (`WIP: Task 7 - Integrate Service Worker caching and PWA manifests`).
+- [x] **Step 1: Create sw.js** implementing cache-first lookup and fetch-update strategies for `index.html`, `css/app.css`, `src/app.js`, `src/store.js`, `src/utils.js`, `src/components/*` and `lib/chrono.js`.
+- [x] **Step 2: Register Service Worker in src/app.js** during app boot with fallback error handling.
+- [x] **Step 3: Create manifest.json** mapping metadata, colors, and application icon paths for PWA registration.
+- [x] **Step 4: Verify offline reloading works via Chrome DevTools and commit** (`WIP: Task 7 - Integrate Service Worker caching and PWA manifests`).
 
 ---
 

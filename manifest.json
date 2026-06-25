@@ -1,0 +1,15 @@
+{
+  "name": "Cognify",
+  "short_name": "Cognify",
+  "start_url": "./index.html",
+  "display": "standalone",
+  "theme_color": "#2b56f5",
+  "background_color": "#fafafa",
+  "icons": [
+    {
+      "src": "icon.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    }
+  ]
+}
