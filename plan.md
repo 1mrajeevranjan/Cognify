@@ -173,9 +173,9 @@
 - Consumes: `TaskStore`
 - Produces: Onboarding screens and App Settings overlay.
 
-- [ ] **Step 1: Implement Onboarding view** in `src/components/views.js` highlighting keyboard shortcuts, NLP examples, and local-first data benefits with premium progress indicator.
-- [ ] **Step 2: Implement Settings view** with Light/Dark theme toggle, storage clear, and JSON import/export for local backups.
-- [ ] **Step 3: Verify overlays and commit** (`WIP: Task 9 - Add Onboarding and App Settings components`).
+- [x] **Step 1: Implement Onboarding view** in `src/components/views.js` highlighting keyboard shortcuts, NLP examples, and local-first data benefits with premium progress indicator.
+- [x] **Step 2: Implement Settings view** with Light/Dark theme toggle, storage clear, and JSON import/export for local backups.
+- [x] **Step 3: Verify overlays and commit** (`WIP: Task 9 - Add Onboarding and App Settings components`).
 
 ---
 

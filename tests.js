@@ -228,6 +228,8 @@ runStoreTests().then(() => {
   return runPWATests();
 }).then(() => {
   return runReminderTests();
+}).then(() => {
+  return runOnboardingAndSettingsTests();
 }).catch(err => {
   console.error('✗ Tests Failed:', err);
   process.exit(1);
@@ -851,5 +853,73 @@ async function runReminderTests() {
   console.log('✓ Main App Notifier integration verified');
 
   console.log('✓ All Task 8 Reminder Tests Passed!');
+}
+
+// ==========================================
+// 10. Onboarding & App Settings Tests (TDD)
+// ==========================================
+async function runOnboardingAndSettingsTests() {
+  console.log('Running Task 9 Onboarding & App Settings Tests...');
+  const { OnboardingView, SettingsView } = await import('./src/components/views.js');
+  const { TaskStore } = await import('./src/store.js');
+
+  const store = new TaskStore();
+  await store.init();
+
+  // Reset onboarding settings
+  await store.delete('settings', 'onboarded');
+
+  // 1. Test OnboardingView elements and flow
+  const onboardingEl = OnboardingView(store);
+  assert.ok(onboardingEl, 'OnboardingView should return a DOM element');
+  assert.ok(onboardingEl.classList.contains('onboarding-view-container'), 'OnboardingView should have onboarding-view-container class');
+
+  const startBtn = onboardingEl.querySelector('.get-started-btn');
+  assert.ok(startBtn, 'OnboardingView must have a "Get Started" button');
+
+  // Click start onboarding
+  let onboardingRedirected = false;
+  window.location.hash = '#onboarding';
+  
+  startBtn.dispatchEvent('click');
+
+  // Verify DB setting updated
+  const onboardedSetting = await store.get('settings', 'onboarded');
+  assert.ok(onboardedSetting && onboardedSetting.value === true, 'Onboarding should save onboarded: true in settings store');
+  
+  // Wait a moment for location hash redirect
+  await new Promise(resolve => setTimeout(resolve, 50));
+  assert.strictEqual(window.location.hash, '#today', 'Onboarding should redirect to #today on completion');
+  console.log('✓ OnboardingView flows verified');
+
+  // 2. Test SettingsView actions
+  const settingsEl = SettingsView(store);
+  assert.ok(settingsEl, 'SettingsView should return a DOM element');
+  assert.ok(settingsEl.classList.contains('settings-view-container'), 'SettingsView should have settings-view-container class');
+
+  const clearBtn = settingsEl.querySelector('.clear-data-btn');
+  assert.ok(clearBtn, 'SettingsView must have a "Clear All Data" button');
+
+  // Populate mock data to clear
+  await store.put('tasks', { id: 't-clear', title: 'Clear Me', completed: false });
+  let tasksBefore = await store.getAll('tasks');
+  assert.ok(tasksBefore.length > 0, 'Database should contain tasks before clearing');
+
+  // Click clear
+  clearBtn.dispatchEvent('click');
+
+  // Wait for clear operations
+  await new Promise(resolve => setTimeout(resolve, 100));
+
+  // Verify DB is cleared
+  const tasksAfter = await store.getAll('tasks');
+  assert.strictEqual(tasksAfter.length, 0, 'Tasks store should be completely cleared after data clear action');
+
+  const onboardedAfterClear = await store.get('settings', 'onboarded');
+  assert.ok(!onboardedAfterClear, 'onboarded setting should be deleted or false after clear');
+  assert.strictEqual(window.location.hash, '#onboarding', 'Settings clear data should redirect back to onboarding screen');
+  console.log('✓ SettingsView clear data action verified');
+
+  console.log('✓ All Task 9 Onboarding & Settings Tests Passed!');
 }
 

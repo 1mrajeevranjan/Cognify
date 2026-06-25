@@ -35,7 +35,7 @@ function openQuickEntry() {
 
 // Simple view templates (Task 4 will expand these modularly)
 const views = {
-  onboarding: () => OnboardingView(),
+  onboarding: () => OnboardingView(store),
   today: () => {
     const tasks = store.getAllCached('tasks');
     const todayStr = new Date().toISOString().split('T')[0];
@@ -65,7 +65,7 @@ const views = {
   },
   someday: () => '<h1>Someday</h1>',
   logbook: () => '<h1>Logbook</h1>',
-  settings: () => SettingsView()
+  settings: () => SettingsView(store)
 };
 
 // Route switching logic
@@ -132,6 +132,18 @@ async function initApp() {
       }
     } else if (!window.location.hash || window.location.hash === '#onboarding') {
       window.location.hash = '#today';
+    }
+
+    // Apply saved theme preference
+    const themeSetting = store.getCached('settings', 'theme');
+    if (themeSetting) {
+      if (themeSetting.value === 'dark') {
+        document.body.classList.add('dark-theme');
+        document.body.classList.remove('light-theme');
+      } else if (themeSetting.value === 'light') {
+        document.body.classList.add('light-theme');
+        document.body.classList.remove('dark-theme');
+      }
     }
 
     // Set up subscriptions

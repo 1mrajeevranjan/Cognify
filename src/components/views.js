@@ -59,7 +59,7 @@ export function TodayView(tasks, projects = {}) {
   return createSplitLayoutView('today-view-container', 'Today', tasks, projects);
 }
 
-export function OnboardingView() {
+export function OnboardingView(store) {
   const el = document.createElement('div');
   el.classList.add('onboarding-view-container');
   
@@ -68,19 +68,180 @@ export function OnboardingView() {
   el.appendChild(heading);
 
   const desc = document.createElement('p');
-  desc.textContent = 'Your calm, cognitive assistant.';
+  desc.textContent = 'Your calm, offline-first personal space for focused thinking and capturing.';
   el.appendChild(desc);
+
+  // Features / Shortcuts section
+  const section = document.createElement('div');
+  section.classList.add('onboarding-features');
+  section.innerHTML = `
+    <div class="feature-item">
+      <h3>Keyboard Shortcut</h3>
+      <p>Press <kbd>Ctrl</kbd> + <kbd>Space</kbd> anywhere to trigger Quick Entry floating capture.</p>
+    </div>
+    <div class="feature-item">
+      <h3>Natural Language Capture</h3>
+      <p>Type relative dates and metadata naturally, e.g., <em>"Water the plants tomorrow !p1 #home"</em></p>
+    </div>
+    <div class="feature-item">
+      <h3>100% Local & Offline</h3>
+      <p>Your data stays on your device in local IndexedDB storage. Zero cloud sync tracking by default.</p>
+    </div>
+  `;
+  el.appendChild(section);
+
+  const startBtn = document.createElement('button');
+  startBtn.classList.add('get-started-btn');
+  startBtn.textContent = 'Get Started';
+  startBtn.addEventListener('click', async () => {
+    if (store) {
+      await store.put('settings', { key: 'onboarded', value: true });
+    }
+    window.location.hash = '#today';
+  });
+  el.appendChild(startBtn);
   
   return el;
 }
 
-export function SettingsView() {
+export function SettingsView(store) {
   const el = document.createElement('div');
   el.classList.add('settings-view-container');
   
   const heading = document.createElement('h1');
   heading.textContent = 'Settings';
   el.appendChild(heading);
+
+  // Theme section
+  const themeSection = document.createElement('div');
+  themeSection.classList.add('settings-section');
+  themeSection.innerHTML = `<h3>Appearance</h3>`;
+  
+  const themeToggle = document.createElement('button');
+  themeToggle.classList.add('theme-toggle-btn');
+  themeToggle.textContent = 'Toggle Dark Mode';
+  themeToggle.addEventListener('click', () => {
+    const isCurrentlyDark = document.body.classList.contains('dark-theme') || 
+      (!document.body.classList.contains('light-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
+    
+    if (isCurrentlyDark) {
+      document.body.classList.remove('dark-theme');
+      document.body.classList.add('light-theme');
+      if (store) {
+        store.put('settings', { key: 'theme', value: 'light' });
+      }
+    } else {
+      document.body.classList.remove('light-theme');
+      document.body.classList.add('dark-theme');
+      if (store) {
+        store.put('settings', { key: 'theme', value: 'dark' });
+      }
+    }
+  });
+  themeSection.appendChild(themeToggle);
+  el.appendChild(themeSection);
+
+  // Backup Import/Export section
+  const backupSection = document.createElement('div');
+  backupSection.classList.add('settings-section');
+  backupSection.innerHTML = `<h3>Data Portability</h3>`;
+
+  const exportBtn = document.createElement('button');
+  exportBtn.classList.add('backup-export-btn');
+  exportBtn.textContent = 'Export JSON Backup';
+  exportBtn.addEventListener('click', async () => {
+    if (!store) return;
+    const tasks = store.getAllCached('tasks');
+    const projects = store.getAllCached('projects');
+    const areas = store.getAllCached('areas');
+    const backupData = JSON.stringify({ tasks, projects, areas }, null, 2);
+    
+    try {
+      const blob = new Blob([backupData], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `cognify-backup-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+    } catch (e) {
+      console.error('Backup export failed:', e);
+    }
+  });
+  backupSection.appendChild(exportBtn);
+
+  // Import file input
+  const importInput = document.createElement('input');
+  importInput.setAttribute('type', 'file');
+  importInput.setAttribute('accept', '.json');
+  importInput.style.display = 'none';
+  
+  const importBtn = document.createElement('button');
+  importBtn.classList.add('backup-import-btn');
+  importBtn.textContent = 'Import JSON Backup';
+  importBtn.addEventListener('click', () => importInput.click());
+
+  importInput.addEventListener('change', (event) => {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      try {
+        const data = JSON.parse(e.target.result);
+        if (store && data) {
+          if (Array.isArray(data.areas)) {
+            for (const area of data.areas) await store.put('areas', area);
+          }
+          if (Array.isArray(data.projects)) {
+            for (const proj of data.projects) await store.put('projects', proj);
+          }
+          if (Array.isArray(data.tasks)) {
+            for (const task of data.tasks) await store.put('tasks', task);
+          }
+          alert('Backup imported successfully!');
+        }
+      } catch (err) {
+        alert('Failed to parse backup file: ' + err.message);
+      }
+    };
+    reader.readAsText(file);
+  });
+
+  backupSection.appendChild(importInput);
+  backupSection.appendChild(importBtn);
+  el.appendChild(backupSection);
+
+  // Clear data section
+  const dangerSection = document.createElement('div');
+  dangerSection.classList.add('settings-section', 'danger-section');
+  dangerSection.innerHTML = `<h3>Danger Zone</h3>`;
+
+  const clearBtn = document.createElement('button');
+  clearBtn.classList.add('clear-data-btn');
+  clearBtn.textContent = 'Clear All Data';
+  clearBtn.addEventListener('click', async () => {
+    if (store) {
+      // Clear tasks
+      for (const t of store.getAllCached('tasks')) {
+        await store.delete('tasks', t.id);
+      }
+      // Clear projects
+      for (const p of store.getAllCached('projects')) {
+        await store.delete('projects', p.id);
+      }
+      // Clear areas
+      for (const a of store.getAllCached('areas')) {
+        await store.delete('areas', a.id);
+      }
+      // Delete onboarded setting
+      await store.delete('settings', 'onboarded');
+    }
+    
+    window.location.hash = '#onboarding';
+  });
+  dangerSection.appendChild(clearBtn);
+  el.appendChild(dangerSection);
 
   return el;
 }
