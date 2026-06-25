@@ -166,4 +166,53 @@ export class TaskStore {
       }
     }
   }
+
+  // Populate development seed data
+  async seed() {
+    // Seed Areas
+    await this.put('areas', { id: 'a1', name: 'Personal', icon: 'smile', createdAt: Date.now() });
+    await this.put('areas', { id: 'a2', name: 'Work', icon: 'briefcase', createdAt: Date.now() });
+
+    // Seed Projects
+    await this.put('projects', { id: 'p1', name: 'Fitness Goals', areaId: 'a1', status: 'active', createdAt: Date.now() });
+    await this.put('projects', { id: 'p2', name: 'Work Launch', areaId: 'a2', status: 'active', createdAt: Date.now() });
+
+    // Seed Tasks
+    const todayStr = new Date().toISOString().split('T')[0];
+    const nextMonday = new Date();
+    nextMonday.setDate(nextMonday.getDate() + ((1 + 7 - nextMonday.getDay()) % 7 || 7));
+    const nextMondayStr = nextMonday.toISOString().split('T')[0];
+
+    await this.put('tasks', {
+      id: 't1',
+      title: 'Buy groceries',
+      notes: 'Need milk, bread, and apples.',
+      completed: false,
+      dueDate: todayStr,
+      priority: 'P2',
+      checklistItems: [],
+      tags: ['errand'],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    await this.put('tasks', {
+      id: 't2',
+      title: 'Prepare presentation slides',
+      notes: 'Use calm aesthetics and Outfit font descriptions.',
+      completed: false,
+      dueDate: nextMondayStr,
+      priority: 'P1',
+      checklistItems: [
+        { id: 'sub1', title: 'Draft outline', completed: true },
+        { id: 'sub2', title: 'Export PDF layout', completed: false }
+      ],
+      tags: ['work', 'design'],
+      createdAt: Date.now(),
+      updatedAt: Date.now()
+    });
+
+    // Mark onboarded setting
+    await this.put('settings', { key: 'onboarded', value: true });
+  }
 }

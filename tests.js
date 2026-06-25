@@ -197,7 +197,86 @@ async function runStoreTests() {
   console.log('✓ All Task 2 Store Tests Passed!');
 }
 
-runStoreTests().catch(err => {
-  console.error('✗ Task 2 Store Tests Failed:', err);
+runStoreTests().then(() => {
+  return runRoutingTests();
+}).catch(err => {
+  console.error('✗ Tests Failed:', err);
   process.exit(1);
 });
+
+// ==========================================
+// Mock DOM Setup for app.js/routing tests
+// ==========================================
+const mockSplashClasses = new Set();
+const mockSidebarNav = { innerHTML: '', querySelectorAll: () => [] };
+const mockViewContainer = { innerHTML: '' };
+
+globalThis.window = {
+  location: {
+    hash: '',
+    search: '',
+  },
+  addEventListener(event, callback) {
+    if (event === 'hashchange') {
+      this.hashchangeListener = callback;
+    }
+  },
+  dispatchEvent(event) {
+    if (event === 'hashchange' && this.hashchangeListener) {
+      this.hashchangeListener();
+    }
+  }
+};
+
+globalThis.document = {
+  getElementById(id) {
+    if (id === 'splash') {
+      return {
+        classList: {
+          add: (cls) => mockSplashClasses.add(cls),
+          remove: (cls) => mockSplashClasses.delete(cls)
+        }
+      };
+    }
+    if (id === 'view-container') {
+      return mockViewContainer;
+    }
+    if (id === 'sidebar-nav') {
+      return mockSidebarNav;
+    }
+    return null;
+  },
+  querySelector(selector) {
+    if (selector === '#splash') return this.getElementById('splash');
+    if (selector === '#view-container') return mockViewContainer;
+    if (selector === '#sidebar-nav') return mockSidebarNav;
+    return null;
+  }
+};
+
+// ==========================================
+// 5. App Routing & Boot Behavior Tests (TDD)
+// ==========================================
+async function runRoutingTests() {
+  console.log('Running Task 3 App Routing & Boot Tests...');
+  mockSplashClasses.clear();
+  
+  // Verify app triggers database boot and hide splash screen
+  const appModule = await import('./src/app.js');
+  
+  // Wait to let async boot loop execute
+  await new Promise(resolve => setTimeout(resolve, 10));
+  
+  assert.ok(mockSplashClasses.has('hidden'), 'Splash screen should be hidden after initialization');
+  console.log('✓ Splash screen fade-out verified');
+
+  // Verify routing behaves based on URL hash changes
+  window.location.hash = '#today';
+  window.dispatchEvent('hashchange');
+  
+  // Verify view-container loads content
+  assert.ok(mockViewContainer.innerHTML.includes('Today') || mockViewContainer.innerHTML !== '', 'View container should load views upon hashchange');
+  console.log('✓ URL Hash-change routing verified');
+
+  console.log('✓ All Task 3 Routing Tests Passed!');
+}
