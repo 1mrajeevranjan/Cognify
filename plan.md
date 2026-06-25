@@ -189,9 +189,9 @@
 - Consumes: All modules
 - Produces: PWA package ready for deployment.
 
-- [ ] **Step 1: Update tests.js to run a complete suite self-check** (assertions for all systems).
-- [ ] **Step 2: Update CLAUDE.md** to define the test runner command: `node tests.js`.
-- [ ] **Step 3: Execute tests, verify clean git status, and commit** (`WIP: Task 10 - Run final test suite, and update CLAUDE.md`).
+- [x] **Step 1: Update tests.js to run a complete suite self-check** (assertions for all systems).
+- [x] **Step 2: Update CLAUDE.md** to define the test runner command: `node tests.js`.
+- [x] **Step 3: Execute tests, verify clean git status, and commit** (`WIP: Task 10 - Run final test suite, and update CLAUDE.md`).
 
 ---
 

@@ -230,6 +230,14 @@ runStoreTests().then(() => {
   return runReminderTests();
 }).then(() => {
   return runOnboardingAndSettingsTests();
+}).then(() => {
+  return runFinalAudit();
+}).then(() => {
+  console.log('');
+  console.log('═══════════════════════════════════════════');
+  console.log('  ✅  ALL SYSTEMS PASS — Cognify Phase 1   ');
+  console.log('═══════════════════════════════════════════');
+  console.log('');
 }).catch(err => {
   console.error('✗ Tests Failed:', err);
   process.exit(1);
@@ -923,3 +931,82 @@ async function runOnboardingAndSettingsTests() {
   console.log('✓ All Task 9 Onboarding & Settings Tests Passed!');
 }
 
+// ==========================================
+// 11. Final Quality Audit (Task 10)
+// ==========================================
+async function runFinalAudit() {
+  console.log('Running Task 10 Final Quality Audit...');
+
+  // 1. All required source files exist
+  const requiredFiles = [
+    'index.html',
+    'css/app.css',
+    'src/app.js',
+    'src/store.js',
+    'src/utils.js',
+    'src/components/views.js',
+    'src/components/item.js',
+    'src/components/quickentry.js',
+    'sw.js',
+    'manifest.json',
+    'lib/chrono.js',
+    'package.json',
+    'CLAUDE.md',
+  ];
+  for (const f of requiredFiles) {
+    assert.ok(fs.existsSync(path.resolve(f)), `Required file missing: ${f}`);
+  }
+  console.log(`✓ All ${requiredFiles.length} required files present`);
+
+  // 2. CSS contains all core design tokens
+  const css = fs.readFileSync(path.resolve('css/app.css'), 'utf8');
+  for (const token of ['--background', '--foreground', '--accent', '--sidebar-background', '--font-sans']) {
+    assert.ok(css.includes(token), `css/app.css must define ${token}`);
+  }
+  // Onboarding & Settings classes
+  assert.ok(css.includes('.onboarding-view-container'), 'css must style .onboarding-view-container');
+  assert.ok(css.includes('.settings-view-container'), 'css must style .settings-view-container');
+  assert.ok(css.includes('.get-started-btn'), 'css must style .get-started-btn');
+  assert.ok(css.includes('.danger-section'), 'css must style .danger-section');
+  assert.ok(css.includes('body.dark-theme'), 'css must define explicit dark-theme override');
+  assert.ok(css.includes('body.light-theme'), 'css must define explicit light-theme override');
+  console.log('✓ CSS design tokens and view classes verified');
+
+  // 3. app.js passes store to OnboardingView and SettingsView
+  const appJs = fs.readFileSync(path.resolve('src/app.js'), 'utf8');
+  assert.ok(appJs.includes('OnboardingView(store)'), 'app.js must pass store to OnboardingView');
+  assert.ok(appJs.includes('SettingsView(store)'), 'app.js must pass store to SettingsView');
+  assert.ok(appJs.includes('notifier.startChecking'), 'app.js must start the reminder check loop');
+  assert.ok(appJs.includes('serviceWorker'), 'app.js must register the service worker');
+  console.log('✓ app.js integration wiring verified');
+
+  // 4. views.js exports all required views
+  const viewsJs = fs.readFileSync(path.resolve('src/components/views.js'), 'utf8');
+  for (const fn of ['TodayView', 'OnboardingView', 'SettingsView', 'UpcomingView']) {
+    assert.ok(viewsJs.includes(`export function ${fn}`), `views.js must export ${fn}`);
+  }
+  assert.ok(viewsJs.includes('get-started-btn'), 'OnboardingView must render get-started-btn');
+  assert.ok(viewsJs.includes('clear-data-btn'), 'SettingsView must render clear-data-btn');
+  assert.ok(viewsJs.includes('theme-toggle-btn'), 'SettingsView must render theme-toggle-btn');
+  console.log('✓ views.js exports and view elements verified');
+
+  // 5. sw.js implements install + fetch
+  const sw = fs.readFileSync(path.resolve('sw.js'), 'utf8');
+  assert.ok(sw.includes('install'), 'sw.js must handle install event');
+  assert.ok(sw.includes('fetch'), 'sw.js must handle fetch event');
+  console.log('✓ Service Worker lifecycle handlers verified');
+
+  // 6. manifest.json is valid JSON with required fields
+  const manifest = JSON.parse(fs.readFileSync(path.resolve('manifest.json'), 'utf8'));
+  for (const field of ['name', 'short_name', 'start_url', 'display']) {
+    assert.ok(manifest[field], `manifest.json must define ${field}`);
+  }
+  console.log('✓ PWA manifest verified');
+
+  // 7. CLAUDE.md documents the test command
+  const claude = fs.readFileSync(path.resolve('CLAUDE.md'), 'utf8');
+  assert.ok(claude.includes('node tests.js'), 'CLAUDE.md must document the test command');
+  console.log('✓ CLAUDE.md test command documented');
+
+  console.log('✓ All Task 10 Final Audit Checks Passed!');
+}
