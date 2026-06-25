@@ -330,17 +330,32 @@ class MockElement {
   }
   setAttribute(name, val) { this.attributes.set(name, String(val)); }
   getAttribute(name) { return this.attributes.get(name); }
-  appendChild(child) { this.children.push(child); }
+  appendChild(child) {
+    this.children.push(child);
+    if (child && typeof child === 'object') {
+      child.parentNode = this;
+    }
+  }
   addEventListener(event, callback) {
     if (!this.listeners[event]) this.listeners[event] = [];
     this.listeners[event].push(callback);
   }
   dispatchEvent(event, data = {}) {
-    if (typeof data === 'object' && !data.stopPropagation) {
-      data.stopPropagation = () => {};
+    let stopped = false;
+    if (typeof data === 'object') {
+      if (!data.stopPropagation) {
+        data.stopPropagation = () => { stopped = true; };
+      }
+      if (!data.target) {
+        data.target = this;
+      }
     }
     const list = this.listeners[event] || [];
     for (const cb of list) cb(data);
+    
+    if (!stopped && this.parentNode && typeof this.parentNode.dispatchEvent === 'function') {
+      this.parentNode.dispatchEvent(event, data);
+    }
   }
   querySelector(selector) {
     if (selector.startsWith('.')) {
@@ -431,6 +446,19 @@ async function runUITests() {
   assert.strictEqual(completedEventData.completed, true, 'Event payload should indicate completion status is true');
   console.log('✓ Task completion click hold state verified');
 
+  // 1c. Test task selection/click handler to open detail drawer
+  let selectedEventDispatched = false;
+  let selectedEventData = null;
+  itemEl.addEventListener('task-selected', (data) => {
+    selectedEventDispatched = true;
+    selectedEventData = data;
+  });
+
+  itemEl.dispatchEvent('click');
+  assert.ok(selectedEventDispatched, 'task-selected event should be dispatched when task row is clicked');
+  assert.strictEqual(selectedEventData.id, 't-ui', 'Selected event payload should carry task ID');
+  console.log('✓ Task item row selection click verified');
+
   // 2. Test TaskList renders empty state when empty
   const emptyListEl = TaskList([], {});
   const emptyState = emptyListEl.querySelector('.empty-state');
@@ -477,6 +505,30 @@ async function runUITests() {
   assert.ok(todayEl, 'TodayView should return a DOM element');
   assert.ok(todayEl.classList.contains('today-view-container'), 'TodayView should have class today-view-container');
   console.log('✓ TodayView render verified');
+
+  // 5b. Test selecting a task in TodayView opens details panel
+  const dummyTaskWithDetail = {
+    id: 't-detail',
+    title: 'Detailed Task',
+    notes: 'Notes here',
+    completed: false
+  };
+  const todayViewEl = TodayView([dummyTaskWithDetail], {});
+  const taskRow = todayViewEl.querySelector('#task-t-detail');
+  assert.ok(taskRow, 'Task row should exist in TodayView');
+  
+  // Before click, detail panel should not be present
+  let detailPanel = todayViewEl.querySelector('.task-detail-panel');
+  assert.strictEqual(detailPanel, null, 'Detail panel should not be present initially');
+
+  // Simulate clicking task row
+  taskRow.dispatchEvent('click');
+
+  // After click, detail panel should be present
+  detailPanel = todayViewEl.querySelector('.task-detail-panel');
+  assert.ok(detailPanel, 'Detail panel should be rendered after clicking task row');
+  console.log('✓ TodayView opens detail panel on task row click');
+
 
   const onboardingEl = OnboardingView();
   assert.ok(onboardingEl, 'OnboardingView should return a DOM element');

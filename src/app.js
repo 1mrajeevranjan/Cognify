@@ -79,6 +79,23 @@ function navigate() {
     if (typeof el === 'string') {
       viewContainer.innerHTML = el;
     } else if (el) {
+      if (el.addEventListener) {
+        el.addEventListener('task-updated', async (e) => {
+          const data = e.detail || e;
+          if (data && data.id) {
+            await store.put('tasks', { ...data, updatedAt: Date.now() });
+          }
+        });
+        el.addEventListener('task-completed', async (e) => {
+          const data = e.detail || e;
+          if (data && data.id) {
+            const task = store.getCached('tasks', data.id);
+            if (task) {
+              await store.put('tasks', { ...task, completed: data.completed, updatedAt: Date.now() });
+            }
+          }
+        });
+      }
       if (viewContainer.replaceChildren) {
         viewContainer.replaceChildren(el);
       } else if (viewContainer.appendChild) {

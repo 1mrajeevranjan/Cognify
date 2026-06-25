@@ -78,6 +78,11 @@ export function TaskItem(task) {
     el.holdTimer = holdTimer;
   });
 
+  // Click on the row itself to select/inspect the task
+  el.addEventListener('click', () => {
+    el.dispatchEvent('task-selected', { id: task.id, task });
+  });
+
   return el;
 }
 
