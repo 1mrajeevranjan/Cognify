@@ -471,7 +471,7 @@ async function runUITests() {
   console.log('✓ TaskDetailPanel render and save logic verified');
 
   // 5. Test src/components/views.js renders views
-  const { TodayView, OnboardingView, SettingsView } = await import('./src/components/views.js');
+  const { TodayView, OnboardingView, SettingsView, UpcomingView } = await import('./src/components/views.js');
   
   const todayEl = TodayView([], {});
   assert.ok(todayEl, 'TodayView should return a DOM element');
@@ -487,6 +487,18 @@ async function runUITests() {
   assert.ok(settingsEl, 'SettingsView should return a DOM element');
   assert.ok(settingsEl.classList.contains('settings-view-container'), 'SettingsView should have class settings-view-container');
   console.log('✓ SettingsView render verified');
+
+  const dummyUpcomingTasks = [
+    { id: 'tu1', title: 'Task Due Tomorrow', completed: false, dueDate: '2026-06-26' },
+    { id: 'tu2', title: 'Task Due Next Week', completed: false, dueDate: '2026-07-02' }
+  ];
+  const upcomingEl = UpcomingView(dummyUpcomingTasks, {});
+  assert.ok(upcomingEl, 'UpcomingView should return a DOM element');
+  assert.ok(upcomingEl.classList.contains('upcoming-view-container'), 'UpcomingView should have class upcoming-view-container');
+  
+  const groupHeaders = upcomingEl.querySelectorAll('.date-group-header');
+  assert.ok(groupHeaders.length >= 2, 'UpcomingView should group tasks by due date');
+  console.log('✓ UpcomingView grouping and rendering verified');
 
   console.log('✓ All Task 4 UI Component Tests Passed!');
 }

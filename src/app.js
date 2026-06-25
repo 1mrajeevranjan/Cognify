@@ -1,5 +1,5 @@
 import { TaskStore } from './store.js';
-import { TodayView, OnboardingView, SettingsView } from './components/views.js';
+import { TodayView, OnboardingView, SettingsView, UpcomingView } from './components/views.js';
 import { QuickEntry } from './components/quickentry.js';
 
 export const store = new TaskStore();
@@ -53,7 +53,14 @@ const views = {
     }
     return TodayView(tasks, projects);
   },
-  upcoming: () => '<h1>Upcoming</h1>',
+  upcoming: () => {
+    const tasks = store.getAllCached('tasks');
+    const projects = {};
+    for (const proj of store.getAllCached('projects')) {
+      projects[proj.id] = proj;
+    }
+    return UpcomingView(tasks, projects);
+  },
   someday: () => '<h1>Someday</h1>',
   logbook: () => '<h1>Logbook</h1>',
   settings: () => SettingsView()
