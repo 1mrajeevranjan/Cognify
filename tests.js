@@ -292,8 +292,8 @@ class MockElement {
   constructor(tagName) {
     this.tagName = tagName.toUpperCase();
     this.classList = {
-      add: (cls) => this.classes.add(cls),
-      remove: (cls) => this.classes.delete(cls),
+      add: (...clss) => clss.forEach(cls => this.classes.add(cls)),
+      remove: (...clss) => clss.forEach(cls => this.classes.delete(cls)),
       contains: (cls) => this.classes.has(cls),
       toggle: (cls) => {
         if (this.classes.has(cls)) this.classes.delete(cls);
@@ -551,6 +551,36 @@ async function runUITests() {
   const groupHeaders = upcomingEl.querySelectorAll('.date-group-header');
   assert.ok(groupHeaders.length >= 2, 'UpcomingView should group tasks by due date');
   console.log('✓ UpcomingView grouping and rendering verified');
+
+  // 6b. Test rescheduling controls in UpcomingView
+  const dummyTaskToReschedule = { id: 'tr-1', title: 'Reschedule Me', completed: false, dueDate: '2026-06-25' };
+  const upcomingViewEl2 = UpcomingView([dummyTaskToReschedule], {});
+  
+  // Find reschedule button
+  const rescheduleBtn = upcomingViewEl2.querySelector('.reschedule-btn');
+  assert.ok(rescheduleBtn, 'Reschedule button should exist in UpcomingView rows');
+
+  // Trigger click on reschedule button
+  rescheduleBtn.dispatchEvent('click');
+
+  // Find tomorrow option button
+  const tomorrowBtn = upcomingViewEl2.querySelector('.reschedule-tomorrow');
+  assert.ok(tomorrowBtn, 'Tomorrow option should be present in reschedule controls');
+
+  // Listen to task-updated event
+  let updatedTaskData = null;
+  upcomingViewEl2.addEventListener('task-updated', (data) => {
+    updatedTaskData = data.detail || data;
+  });
+
+  tomorrowBtn.dispatchEvent('click');
+
+  assert.ok(updatedTaskData, 'task-updated event should be dispatched after rescheduling');
+  const tomorrow = new Date();
+  tomorrow.setDate(tomorrow.getDate() + 1);
+  const tomorrowStr = tomorrow.toISOString().split('T')[0];
+  assert.strictEqual(updatedTaskData.dueDate, tomorrowStr, 'Task due date should be rescheduled to tomorrow');
+  console.log('✓ UpcomingView rescheduling controls verified');
 
   console.log('✓ All Task 4 UI Component Tests Passed!');
 }

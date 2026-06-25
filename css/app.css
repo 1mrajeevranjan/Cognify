@@ -281,4 +281,62 @@ body {
   }
 }
 
+/* Reschedule Controls */
+.reschedule-container {
+  position: relative;
+}
+
+.reschedule-btn {
+  background: none;
+  border: none;
+  font-size: 1.1rem;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  border-radius: 4px;
+  opacity: 0.5;
+  transition: opacity 0.2s, background-color 0.2s;
+}
+
+.reschedule-btn:hover {
+  opacity: 1;
+  background-color: var(--border);
+}
+
+.reschedule-popover {
+  position: absolute;
+  top: 100%;
+  right: 0;
+  background-color: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  box-shadow: var(--shadow-sm), 0 4px 12px rgba(0,0,0,0.1);
+  display: none;
+  flex-direction: column;
+  z-index: 100;
+  min-width: 120px;
+  padding: 4px;
+}
+
+.reschedule-popover.show {
+  display: flex;
+}
+
+.reschedule-option {
+  background: none;
+  border: none;
+  text-align: left;
+  padding: var(--spacing-sm) var(--spacing-md);
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  color: var(--foreground);
+  cursor: pointer;
+  border-radius: 4px;
+  transition: background-color 0.15s;
+}
+
+.reschedule-option:hover {
+  background-color: var(--selection);
+}
+
+
 

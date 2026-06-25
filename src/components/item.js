@@ -83,6 +83,74 @@ export function TaskItem(task) {
     el.dispatchEvent('task-selected', { id: task.id, task });
   });
 
+  // Reschedule button & dropdown popover
+  const rescheduleContainer = document.createElement('div');
+  rescheduleContainer.classList.add('reschedule-container');
+
+  const rescheduleBtn = document.createElement('button');
+  rescheduleBtn.classList.add('reschedule-btn');
+  rescheduleBtn.textContent = '📅';
+  rescheduleBtn.setAttribute('title', 'Reschedule task');
+  rescheduleContainer.appendChild(rescheduleBtn);
+
+  const popover = document.createElement('div');
+  popover.classList.add('reschedule-popover');
+  
+  const optToday = document.createElement('button');
+  optToday.classList.add('reschedule-option', 'reschedule-today');
+  optToday.textContent = 'Today';
+  optToday.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const todayStr = new Date().toISOString().split('T')[0];
+    el.dispatchEvent('task-updated', { ...task, dueDate: todayStr });
+    popover.classList.remove('show');
+  });
+  popover.appendChild(optToday);
+
+  const optTomorrow = document.createElement('button');
+  optTomorrow.classList.add('reschedule-option', 'reschedule-tomorrow');
+  optTomorrow.textContent = 'Tomorrow';
+  optTomorrow.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const tomorrow = new Date();
+    tomorrow.setDate(tomorrow.getDate() + 1);
+    const tomorrowStr = tomorrow.toISOString().split('T')[0];
+    el.dispatchEvent('task-updated', { ...task, dueDate: tomorrowStr });
+    popover.classList.remove('show');
+  });
+  popover.appendChild(optTomorrow);
+
+  const optNextWeek = document.createElement('button');
+  optNextWeek.classList.add('reschedule-option', 'reschedule-nextweek');
+  optNextWeek.textContent = 'Next Week';
+  optNextWeek.addEventListener('click', (event) => {
+    event.stopPropagation();
+    const nextWeek = new Date();
+    nextWeek.setDate(nextWeek.getDate() + 7);
+    const nextWeekStr = nextWeek.toISOString().split('T')[0];
+    el.dispatchEvent('task-updated', { ...task, dueDate: nextWeekStr });
+    popover.classList.remove('show');
+  });
+  popover.appendChild(optNextWeek);
+
+  const optSomeday = document.createElement('button');
+  optSomeday.classList.add('reschedule-option', 'reschedule-someday');
+  optSomeday.textContent = 'Someday';
+  optSomeday.addEventListener('click', (event) => {
+    event.stopPropagation();
+    el.dispatchEvent('task-updated', { ...task, dueDate: null });
+    popover.classList.remove('show');
+  });
+  popover.appendChild(optSomeday);
+
+  rescheduleContainer.appendChild(popover);
+  el.appendChild(rescheduleContainer);
+
+  rescheduleBtn.addEventListener('click', (event) => {
+    event.stopPropagation();
+    popover.classList.toggle('show');
+  });
+
   return el;
 }
 
