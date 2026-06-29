@@ -33,7 +33,43 @@ function openQuickEntry() {
   }
 }
 
-// Simple view templates (Task 4 will expand these modularly)
+// Sidebar nav definition — route : { label, icon }
+const NAV_ITEMS = [
+  { route: 'inbox',    label: 'Inbox',    icon: '📥' },
+  { route: 'today',    label: 'Today',    icon: '⭐' },
+  { route: 'upcoming', label: 'Upcoming', icon: '📅' },
+  { route: 'someday',  label: 'Someday',  icon: '🌤️' },
+  { route: 'logbook',  label: 'Logbook',  icon: '✅' },
+  { route: 'settings', label: 'Settings', icon: '⚙️' },
+];
+
+// Render (or update) sidebar links + active highlight
+function renderSidebar() {
+  const nav = document.getElementById('sidebar-nav');
+  if (!nav || !nav.dataset) return;
+
+  const current = (window.location.hash || '#today').substring(1);
+
+  // Build fresh if empty, otherwise just toggle active class
+  if (!nav.dataset.built) {
+    nav.innerHTML = '';
+    for (const item of NAV_ITEMS) {
+      const a = document.createElement('a');
+      a.href = `#${item.route}`;
+      a.className = 'sidebar-link';
+      a.dataset.route = item.route;
+      a.innerHTML = `<span class="sidebar-icon">${item.icon}</span><span class="sidebar-label">${item.label}</span>`;
+      nav.appendChild(a);
+    }
+    nav.dataset.built = '1';
+  }
+
+  for (const a of nav.querySelectorAll('.sidebar-link')) {
+    a.classList.toggle('active', a.dataset.route === current);
+  }
+}
+
+// Simple view templates
 const views = {
   onboarding: () => OnboardingView(store),
   today: () => {
@@ -70,6 +106,7 @@ const views = {
 
 // Route switching logic
 function navigate() {
+  renderSidebar();
   const hash = window.location.hash || '#today';
   const viewContainer = document.getElementById('view-container');
   if (!viewContainer) return;
