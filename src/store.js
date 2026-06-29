@@ -4,7 +4,7 @@ export class TaskStore {
   constructor() {
     this.db = null;
     this.dbName = 'CognifyDB';
-    this.dbVersion = 4;
+    this.dbVersion = 5;
     
     // In-memory caches for synchronous reads
     this.caches = {
@@ -17,7 +17,9 @@ export class TaskStore {
       habitLogs: new Map(),
       workspaces: new Map(),
       workspace_members: new Map(),
-      task_comments: new Map()
+      task_comments: new Map(),
+      calendars: new Map(),
+      calendar_events: new Map()
     };
     
     // Subscriber callbacks per store
@@ -31,7 +33,9 @@ export class TaskStore {
       habitLogs: new Set(),
       workspaces: new Set(),
       workspace_members: new Set(),
-      task_comments: new Set()
+      task_comments: new Set(),
+      calendars: new Set(),
+      calendar_events: new Set()
     };
   }
 
@@ -72,6 +76,12 @@ export class TaskStore {
         if (!db.objectStoreNames.contains('task_comments')) {
           db.createObjectStore('task_comments', { keyPath: 'id' });
         }
+        if (!db.objectStoreNames.contains('calendars')) {
+          db.createObjectStore('calendars', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('calendar_events')) {
+          db.createObjectStore('calendar_events', { keyPath: 'id' });
+        }
       };
 
       request.onsuccess = async (event) => {
@@ -88,6 +98,8 @@ export class TaskStore {
           await this._warmCache('workspaces');
           await this._warmCache('workspace_members');
           await this._warmCache('task_comments');
+          await this._warmCache('calendars');
+          await this._warmCache('calendar_events');
           
           this.setupRealtime();
           resolve();
@@ -146,6 +158,15 @@ export class TaskStore {
   // Async put to DB + Cache + Sub notification
   put(storeName, data) {
     const id = data.id || data.key;
+    
+    // Check if task is completed to trigger webhook
+    if (storeName === 'tasks') {
+      const oldTask = this.getCached('tasks', id);
+      if (data.completed && (!oldTask || !oldTask.completed)) {
+        this._triggerWebhooks(data);
+      }
+    }
+
     // Update cache synchronously
     this.caches[storeName].set(id, data);
     this._notify(storeName);
@@ -454,6 +475,43 @@ export class TaskStore {
         };
       }
       await this._putLocal(storeName, localRecord);
+    }
+  }
+
+  // Automated Webhook Integrations
+  async _triggerWebhooks(task) {
+    try {
+      const slackSetting = this.getCached('settings', 'slack_webhook');
+      if (slackSetting && slackSetting.value) {
+        const text = `✅ Task Completed: *${task.title}*${task.notes ? `\n> ${task.notes}` : ''}`;
+        fetch(slackSetting.value, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        }).catch(err => console.warn('Slack webhook failed:', err));
+      }
+      
+      const githubSetting = this.getCached('settings', 'github_token');
+      const githubRepoSetting = this.getCached('settings', 'github_repo');
+      if (githubSetting && githubSetting.value && githubRepoSetting && githubRepoSetting.value) {
+        const [owner, repo] = githubRepoSetting.value.split('/');
+        if (owner && repo) {
+          fetch(`https://api.github.com/repos/${owner}/${repo}/issues`, {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${githubSetting.value}`,
+              'Accept': 'application/vnd.github.v3+json',
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              title: `Task Completed: ${task.title}`,
+              body: `Completed task details:\n\n**Notes:** ${task.notes || 'None'}\n**Completed At:** ${new Date().toISOString()}`
+            })
+          }).catch(err => console.warn('GitHub API failed:', err));
+        }
+      }
+    } catch (err) {
+      console.warn('Webhook triggering failed:', err);
     }
   }
 

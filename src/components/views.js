@@ -382,6 +382,103 @@ export function SettingsView(store) {
 
   el.appendChild(backupSection);
 
+  // Integrations section
+  const integrationsSection = document.createElement('div');
+  integrationsSection.className = 'settings-section';
+  integrationsSection.innerHTML = `<h3>Developer Integrations</h3>`;
+  
+  // Slack Webhook URL
+  const slackLabel = document.createElement('label');
+  slackLabel.textContent = 'Slack Webhook URL';
+  slackLabel.style.display = 'block';
+  slackLabel.style.marginBottom = 'var(--spacing-xs)';
+  const slackInput = document.createElement('input');
+  slackInput.className = 'slack-webhook-input';
+  slackInput.placeholder = 'https://hooks.slack.com/...';
+  slackInput.style.display = 'block';
+  slackInput.style.width = '100%';
+  slackInput.style.padding = 'var(--spacing-sm)';
+  slackInput.style.marginBottom = 'var(--spacing-sm)';
+  slackInput.style.border = '1px solid var(--border)';
+  slackInput.style.borderRadius = '6px';
+  slackInput.style.background = 'var(--surface)';
+  slackInput.style.color = 'var(--foreground)';
+  if (store) {
+    const existing = store.getCached('settings', 'slack_webhook');
+    if (existing && existing.value) slackInput.value = existing.value;
+  }
+  
+  // GitHub PAT
+  const githubLabel = document.createElement('label');
+  githubLabel.textContent = 'GitHub Personal Access Token';
+  githubLabel.style.display = 'block';
+  githubLabel.style.marginBottom = 'var(--spacing-xs)';
+  const githubInput = document.createElement('input');
+  githubInput.type = 'password';
+  githubInput.className = 'github-token-input';
+  githubInput.placeholder = 'ghp_...';
+  githubInput.style.display = 'block';
+  githubInput.style.width = '100%';
+  githubInput.style.padding = 'var(--spacing-sm)';
+  githubInput.style.marginBottom = 'var(--spacing-sm)';
+  githubInput.style.border = '1px solid var(--border)';
+  githubInput.style.borderRadius = '6px';
+  githubInput.style.background = 'var(--surface)';
+  githubInput.style.color = 'var(--foreground)';
+  if (store) {
+    const existing = store.getCached('settings', 'github_token');
+    if (existing && existing.value) githubInput.value = existing.value;
+  }
+
+  // GitHub Repo
+  const githubRepoLabel = document.createElement('label');
+  githubRepoLabel.textContent = 'GitHub Target Repository (Owner/Repo)';
+  githubRepoLabel.style.display = 'block';
+  githubRepoLabel.style.marginBottom = 'var(--spacing-xs)';
+  const githubRepoInput = document.createElement('input');
+  githubRepoInput.className = 'github-repo-input';
+  githubRepoInput.placeholder = 'e.g. 1mrajeevranjan/Cognify';
+  githubRepoInput.style.display = 'block';
+  githubRepoInput.style.width = '100%';
+  githubRepoInput.style.padding = 'var(--spacing-sm)';
+  githubRepoInput.style.marginBottom = 'var(--spacing-sm)';
+  githubRepoInput.style.border = '1px solid var(--border)';
+  githubRepoInput.style.borderRadius = '6px';
+  githubRepoInput.style.background = 'var(--surface)';
+  githubRepoInput.style.color = 'var(--foreground)';
+  if (store) {
+    const existing = store.getCached('settings', 'github_repo');
+    if (existing && existing.value) githubRepoInput.value = existing.value;
+  }
+
+  const saveIntBtn = document.createElement('button');
+  saveIntBtn.className = 'save-integrations-btn';
+  saveIntBtn.textContent = 'Save Integrations';
+  saveIntBtn.style.padding = 'var(--spacing-sm) var(--spacing-md)';
+  saveIntBtn.style.background = 'var(--accent)';
+  saveIntBtn.style.color = 'white';
+  saveIntBtn.style.border = 'none';
+  saveIntBtn.style.borderRadius = '6px';
+  saveIntBtn.style.cursor = 'pointer';
+  saveIntBtn.addEventListener('click', async () => {
+    if (store) {
+      await store.put('settings', { key: 'slack_webhook', value: slackInput.value.trim() });
+      await store.put('settings', { key: 'github_token', value: githubInput.value.trim() });
+      await store.put('settings', { key: 'github_repo', value: githubRepoInput.value.trim() });
+    }
+    saveIntBtn.textContent = 'Saved!';
+    setTimeout(() => { saveIntBtn.textContent = 'Save Integrations'; }, 2000);
+  });
+
+  integrationsSection.appendChild(slackLabel);
+  integrationsSection.appendChild(slackInput);
+  integrationsSection.appendChild(githubLabel);
+  integrationsSection.appendChild(githubInput);
+  integrationsSection.appendChild(githubRepoLabel);
+  integrationsSection.appendChild(githubRepoInput);
+  integrationsSection.appendChild(saveIntBtn);
+  el.appendChild(integrationsSection);
+
   // Clear data section
   const dangerSection = document.createElement('div');
   dangerSection.classList.add('settings-section', 'danger-section');
@@ -632,4 +729,6 @@ export { WorkspacesView } from './workspaces.js';
 export { WorkloadView } from './workload.js';
 export { AnalyticsView } from './analytics.js';
 export { EisenhowerView } from './eisenhower.js';
+export { CalendarView } from './calendar.js';
+export { WeeklyReviewView } from './weeklyreview.js';
 

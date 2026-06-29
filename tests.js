@@ -144,7 +144,9 @@ class MockDatabase {
       ['habitLogs', new Map()],
       ['workspaces', new Map()],
       ['workspace_members', new Map()],
-      ['task_comments', new Map()]
+      ['task_comments', new Map()],
+      ['calendars', new Map()],
+      ['calendar_events', new Map()]
     ]);
   }
   transaction(storeNames, mode) {
@@ -983,6 +985,8 @@ async function runFinalAudit() {
     'src/components/workload.js',
     'src/components/analytics.js',
     'src/components/eisenhower.js',
+    'src/components/calendar.js',
+    'src/components/weeklyreview.js',
     'src/import.js',
     'src/ai.js',
     'src/supabase.js',
@@ -1271,7 +1275,7 @@ async function runPhase3Tests() {
   assert.ok(analyticsEl.querySelector('.analytics-dashboard'), 'AnalyticsView has .analytics-dashboard element');
   console.log('✓ Analytics view verified');
 
-  // 6. Test EisenhowerView segmenting
+  // Eisenhower Matrix
   const { EisenhowerView } = await import('./src/components/eisenhower.js');
   const todayStr = new Date().toISOString().split('T')[0];
   const eTasks = [
@@ -1286,6 +1290,36 @@ async function runPhase3Tests() {
   assert.ok(eisenhowerEl, 'EisenhowerView should render');
   assert.ok(eisenhowerEl.querySelector('.eisenhower-grid'), 'EisenhowerView has .eisenhower-grid element');
   console.log('✓ Eisenhower matrix view verified');
+
+  // 7. Test CalendarView
+  const { CalendarView } = await import('./src/components/calendar.js');
+  const mockCalendarStore = {
+    getAllCached: (name) => {
+      if (name === 'calendars') return [{ id: 'cal1', name: 'Personal Feed', color: '#ff0000' }];
+      if (name === 'calendar_events') return [{ id: 'ev1', calendarId: 'cal1', title: 'Sprint Planning', start: Date.now(), end: Date.now() + 3600000 }];
+      return [];
+    }
+  };
+  const calendarEl = CalendarView(mockCalendarStore);
+  assert.ok(calendarEl, 'CalendarView should render');
+  assert.ok(calendarEl.querySelector('.calendar-list'), 'CalendarView must render sidebar calendar list');
+  assert.ok(calendarEl.querySelector('.calendar-hour-slot'), 'CalendarView must render hourly grid slots');
+  console.log('✓ Calendar view verified');
+
+  // 8. Test WeeklyReviewView
+  const { WeeklyReviewView } = await import('./src/components/weeklyreview.js');
+  const mockReviewStore = {
+    getAllCached: (name) => {
+      if (name === 'tasks') return [{ id: 't1', title: 'Clean Inbox Item', completed: false, projectId: null }];
+      if (name === 'habits') return [{ id: 'h1', name: 'Gym', streak: 4 }];
+      return [];
+    },
+    put: async () => {}
+  };
+  const reviewEl = WeeklyReviewView(mockReviewStore);
+  assert.ok(reviewEl, 'WeeklyReviewView should render');
+  assert.ok(reviewEl.querySelector('.wizard-container'), 'WeeklyReviewView must render wizard step container');
+  console.log('✓ Weekly Review view verified');
 
   // Clean up global mock
   delete globalThis.supabase;

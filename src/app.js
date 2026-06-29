@@ -1,5 +1,5 @@
 import { TaskStore } from './store.js';
-import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView, PomodoroView, FocusView, HabitsView, KanbanView, AuthView, WorkspacesView, WorkloadView, AnalyticsView, EisenhowerView } from './components/views.js';
+import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView, PomodoroView, FocusView, HabitsView, KanbanView, AuthView, WorkspacesView, WorkloadView, AnalyticsView, EisenhowerView, CalendarView, WeeklyReviewView } from './components/views.js';
 import { QuickEntry } from './components/quickentry.js';
 import { Notifier } from './utils.js';
 import { supabase } from './supabase.js';
@@ -50,6 +50,8 @@ const NAV_ITEMS = [
   { route: 'workspaces', label: 'Teams',  icon: '👥' },
   { route: 'workload', label: 'Workload', icon: '📊' },
   { route: 'analytics', label: 'Analytics', icon: '📈' },
+  { route: 'calendar',  label: 'Calendar',  icon: '🗓️' },
+  { route: 'weeklyreview', label: 'Review', icon: '📝' },
   { route: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -188,6 +190,12 @@ const views = {
   },
   analytics: () => {
     return AnalyticsView(store);
+  },
+  calendar: () => {
+    return CalendarView(store);
+  },
+  weeklyreview: () => {
+    return WeeklyReviewView(store);
   },
   auth: () => AuthView(store)
 };

@@ -17,6 +17,8 @@ const ASSETS = [
   './src/components/workload.js',
   './src/components/analytics.js',
   './src/components/eisenhower.js',
+  './src/components/calendar.js',
+  './src/components/weeklyreview.js',
   './src/import.js',
   './src/ai.js',
   './lib/chrono.js',
