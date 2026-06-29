@@ -141,7 +141,10 @@ class MockDatabase {
       ['settings', new Map()],
       ['sessions', new Map()],
       ['habits', new Map()],
-      ['habitLogs', new Map()]
+      ['habitLogs', new Map()],
+      ['workspaces', new Map()],
+      ['workspace_members', new Map()],
+      ['task_comments', new Map()]
     ]);
   }
   transaction(storeNames, mode) {
@@ -236,11 +239,13 @@ runStoreTests().then(() => {
 }).then(() => {
   return runPhase2Tests();
 }).then(() => {
+  return runPhase3Tests();
+}).then(() => {
   return runFinalAudit();
 }).then(() => {
   console.log('');
   console.log('═══════════════════════════════════════════');
-  console.log('  ✅  ALL SYSTEMS PASS — Cognify Phase 2   ');
+  console.log('  ✅  ALL SYSTEMS PASS — Cognify Phase 3   ');
   console.log('═══════════════════════════════════════════');
   console.log('');
 }).catch(err => {
@@ -971,11 +976,23 @@ async function runFinalAudit() {
     'src/components/views.js',
     'src/components/item.js',
     'src/components/quickentry.js',
+    'src/components/pomodoro.js',
+    'src/components/habits.js',
+    'src/components/kanban.js',
+    'src/components/workspaces.js',
+    'src/components/workload.js',
+    'src/components/analytics.js',
+    'src/components/eisenhower.js',
+    'src/import.js',
+    'src/ai.js',
+    'src/supabase.js',
     'sw.js',
     'manifest.json',
     'lib/chrono.js',
+    'lib/supabase.js',
     'package.json',
     'CLAUDE.md',
+    'supabase_schema.sql'
   ];
   for (const f of requiredFiles) {
     assert.ok(fs.existsSync(path.resolve(f)), `Required file missing: ${f}`);
@@ -1158,5 +1175,120 @@ async function runPhase2Tests() {
   console.log('✓ DailyBriefing local prioritization scoring verified');
 
   console.log('✓ All Phase 2 Core Feature Tests Passed!');
+}
+
+async function runPhase3Tests() {
+  console.log('Running Phase 3 Integration Tests...');
+
+  // 1. Verify files exist
+  const phase3Files = [
+    'src/components/workspaces.js',
+    'src/components/workload.js',
+    'src/components/analytics.js',
+    'src/components/eisenhower.js',
+    'src/supabase.js',
+    'supabase_schema.sql'
+  ];
+  for (const f of phase3Files) {
+    assert.ok(fs.existsSync(path.resolve(f)), `Phase 3 required file missing: ${f}`);
+  }
+  console.log('✓ All Phase 3 source files present');
+
+  // 2. Mock Supabase object in globalThis
+  const mockSupabase = {
+    auth: {
+      user: () => ({ id: 'u123', email: 'test@example.com' }),
+      getSession: async () => ({ data: { session: { user: { id: 'u123', email: 'test@example.com' } } } }),
+      onAuthStateChange: (cb) => {
+        cb('SIGNED_IN', { user: { id: 'u123', email: 'test@example.com' } });
+        return { data: { subscription: { unsubscribe: () => {} } } };
+      },
+      signOut: async () => {}
+    },
+    from: (table) => ({
+      upsert: async () => ({ error: null }),
+      delete: () => ({ eq: async () => ({ error: null }) }),
+      select: async () => ({ data: [], error: null })
+    }),
+    channel: () => ({
+      on: function() { return this; },
+      subscribe: () => {}
+    })
+  };
+  
+  globalThis.supabase = mockSupabase;
+
+  // 3. Test WorkspacesView rendering
+  const { WorkspacesView } = await import('./src/components/workspaces.js');
+  const mockStore = {
+    getAllCached: (name) => {
+      if (name === 'workspaces') return [{ id: 'w1', name: 'Design Team' }];
+      if (name === 'workspace_members') return [{ id: 'm1', workspaceId: 'w1', email: 'alice@example.com', role: 'member' }];
+      return [];
+    },
+    put: async () => {}
+  };
+  const workspacesEl = WorkspacesView(mockStore);
+  assert.ok(workspacesEl, 'WorkspacesView should render');
+  assert.ok(workspacesEl.querySelector('.workspaces-list'), 'WorkspacesView has .workspaces-list element');
+  assert.ok(workspacesEl.querySelector('.add-workspace-btn'), 'WorkspacesView has add button');
+  console.log('✓ Workspaces view verified');
+
+  // 4. Test WorkloadView rendering & grouping
+  const { WorkloadView } = await import('./src/components/workload.js');
+  const mockWorkloadStore = {
+    getAllCached: (name) => {
+      if (name === 'tasks') return [
+        { id: 't1', title: 'Task 1', completed: false, assigneeEmail: 'alice@example.com' },
+        { id: 't2', title: 'Task 2', completed: false, assigneeEmail: 'bob@example.com' }
+      ];
+      if (name === 'workspace_members') return [
+        { id: 'm1', email: 'alice@example.com' },
+        { id: 'm2', email: 'bob@example.com' }
+      ];
+      return [];
+    }
+  };
+  const workloadEl = WorkloadView(mockWorkloadStore);
+  assert.ok(workloadEl, 'WorkloadView should render');
+  assert.ok(workloadEl.querySelector('.workload-columns'), 'WorkloadView has .workload-columns element');
+  console.log('✓ Workload view verified');
+
+  // 5. Test AnalyticsView calculations
+  const { AnalyticsView } = await import('./src/components/analytics.js');
+  const mockAnalyticsStore = {
+    getAllCached: (name) => {
+      if (name === 'tasks') return [
+        { id: 't1', completed: true },
+        { id: 't2', completed: false }
+      ];
+      if (name === 'sessions') return [{ id: 's1', duration: 1500 }];
+      return [];
+    }
+  };
+  const analyticsEl = AnalyticsView(mockAnalyticsStore);
+  assert.ok(analyticsEl, 'AnalyticsView should render');
+  assert.ok(analyticsEl.querySelector('.analytics-dashboard'), 'AnalyticsView has .analytics-dashboard element');
+  console.log('✓ Analytics view verified');
+
+  // 6. Test EisenhowerView segmenting
+  const { EisenhowerView } = await import('./src/components/eisenhower.js');
+  const todayStr = new Date().toISOString().split('T')[0];
+  const eTasks = [
+    { id: 'e1', title: 'Urgent Important', completed: false, priority: 'P1', dueDate: todayStr }
+  ];
+  const mockEisenhowerStore = {
+    getAllCached: () => eTasks,
+    getCached: () => eTasks[0],
+    put: async () => {}
+  };
+  const eisenhowerEl = EisenhowerView(eTasks, mockEisenhowerStore);
+  assert.ok(eisenhowerEl, 'EisenhowerView should render');
+  assert.ok(eisenhowerEl.querySelector('.eisenhower-grid'), 'EisenhowerView has .eisenhower-grid element');
+  console.log('✓ Eisenhower matrix view verified');
+
+  // Clean up global mock
+  delete globalThis.supabase;
+  console.log('✓ All Phase 3 Integration Tests Passed!');
 }
 

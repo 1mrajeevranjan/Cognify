@@ -1,3 +1,6 @@
+import { store } from '../app.js';
+import { supabase } from '../supabase.js';
+
 export function TaskItem(task) {
   const el = document.createElement('div');
   el.classList.add('task-item-row');
@@ -364,6 +367,50 @@ export function TaskDetailPanel(task, callbacks = {}) {
   subtasksContainer.appendChild(addBtn);
   el.appendChild(subtasksContainer);
 
+  // Fetch workspace membership
+  const workspaceMembers = store ? store.getAllCached('workspace_members') : [];
+  
+  // Assignee dropdown selector
+  const assigneeContainer = document.createElement('div');
+  assigneeContainer.classList.add('detail-assignee-container');
+  assigneeContainer.style.marginTop = 'var(--spacing-sm)';
+  
+  const assigneeLabel = document.createElement('span');
+  assigneeLabel.textContent = 'Assignee:';
+  assigneeLabel.style.marginRight = 'var(--spacing-xs)';
+  assigneeContainer.appendChild(assigneeLabel);
+
+  const assigneeSelect = document.createElement('select');
+  assigneeSelect.classList.add('detail-assignee-select');
+  assigneeSelect.style.padding = '4px 8px';
+  assigneeSelect.style.borderRadius = '4px';
+  assigneeSelect.style.border = '1px solid var(--border)';
+  assigneeSelect.style.background = 'var(--surface)';
+  assigneeSelect.style.color = 'var(--foreground)';
+  assigneeSelect.style.fontFamily = 'var(--font-sans)';
+  
+  // Default unassigned option
+  const optNone = document.createElement('option');
+  optNone.value = '';
+  optNone.textContent = 'Unassigned';
+  if (!taskCopy.assigneeEmail) optNone.selected = true;
+  assigneeSelect.appendChild(optNone);
+
+  for (const m of workspaceMembers) {
+    const opt = document.createElement('option');
+    opt.value = m.email;
+    opt.textContent = m.email;
+    if (taskCopy.assigneeEmail === m.email) opt.selected = true;
+    assigneeSelect.appendChild(opt);
+  }
+
+  assigneeSelect.addEventListener('change', () => {
+    taskCopy.assigneeEmail = assigneeSelect.value || null;
+    triggerSave();
+  });
+  assigneeContainer.appendChild(assigneeSelect);
+  el.appendChild(assigneeContainer);
+
   // Focus Mode Button
   const focusBtn = document.createElement('a');
   focusBtn.className = 'detail-focus-btn';
@@ -379,6 +426,85 @@ export function TaskDetailPanel(task, callbacks = {}) {
   focusBtn.style.fontSize = '0.9rem';
   focusBtn.style.fontWeight = '500';
   el.appendChild(focusBtn);
+
+  // Real-time comments section
+  const commentsContainer = document.createElement('div');
+  commentsContainer.className = 'detail-comments-container';
+  commentsContainer.style.marginTop = 'var(--spacing-lg)';
+  commentsContainer.style.borderTop = '1px solid var(--border)';
+  commentsContainer.style.paddingTop = 'var(--spacing-md)';
+
+  const commentsHeader = document.createElement('h3');
+  commentsHeader.textContent = 'Comments';
+  commentsHeader.style.marginTop = '0';
+  commentsContainer.appendChild(commentsHeader);
+
+  const commentsList = document.createElement('div');
+  commentsList.className = 'comments-list';
+  commentsList.style.display = 'flex';
+  commentsList.style.flexDirection = 'column';
+  commentsList.style.gap = 'var(--spacing-sm)';
+  commentsList.style.maxHeight = '200px';
+  commentsList.style.overflowY = 'auto';
+  commentsList.style.marginBottom = 'var(--spacing-sm)';
+  commentsContainer.appendChild(commentsList);
+
+  function renderComments() {
+    if (!store) return;
+    const allComments = store.getAllCached('task_comments');
+    const taskComments = allComments
+      .filter(c => c.taskId === taskCopy.id)
+      .sort((a, b) => a.createdAt - b.createdAt);
+    commentsList.innerHTML = '';
+    if (taskComments.length === 0) {
+      commentsList.innerHTML = '<p style="color: var(--foreground-muted); font-size: 0.85rem; font-style: italic; margin: 0;">No comments yet</p>';
+      return;
+    }
+    for (const c of taskComments) {
+      const row = document.createElement('div');
+      row.className = 'comment-row';
+      row.style.fontSize = '0.85rem';
+      row.innerHTML = `
+        <div style="font-weight: 600; color: var(--accent);">${c.userEmail.split('@')[0]}</div>
+        <div style="margin-top: 2px;">${c.content}</div>
+        <div style="font-size: 0.75rem; color: var(--foreground-muted); margin-top: 2px;">${new Date(c.createdAt).toLocaleTimeString()}</div>
+      `;
+      commentsList.appendChild(row);
+    }
+  }
+
+  const commentForm = document.createElement('div');
+  commentForm.style.display = 'flex';
+  commentForm.style.gap = 'var(--spacing-xs)';
+  commentForm.innerHTML = `
+    <input class="comment-input" placeholder="Type a comment..." style="flex: 1; padding: var(--spacing-xs); border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--foreground); font-family: var(--font-sans); font-size: 0.85rem;" />
+    <button class="send-comment-btn" style="padding: var(--spacing-xs) var(--spacing-sm); background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Send</button>
+  `;
+  commentsContainer.appendChild(commentForm);
+
+  const sendBtn = commentForm.querySelector('.send-comment-btn');
+  sendBtn && sendBtn.addEventListener('click', async () => {
+    const input = commentForm.querySelector('.comment-input');
+    const content = input ? input.value.trim() : '';
+    if (!content || !store) return;
+    const cId = `c-${Date.now()}`;
+    await store.put('task_comments', {
+      id: cId,
+      taskId: taskCopy.id,
+      content,
+      userEmail: 'You',
+      createdAt: Date.now()
+    });
+    if (input) input.value = '';
+    renderComments();
+  });
+
+  el.appendChild(commentsContainer);
+  
+  if (store) {
+    store.subscribe('task_comments', renderComments);
+  }
+  renderComments();
 
   return el;
 }

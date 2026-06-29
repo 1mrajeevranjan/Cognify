@@ -1,8 +1,10 @@
+import { supabase } from './supabase.js';
+
 export class TaskStore {
   constructor() {
     this.db = null;
     this.dbName = 'CognifyDB';
-    this.dbVersion = 2;
+    this.dbVersion = 4;
     
     // In-memory caches for synchronous reads
     this.caches = {
@@ -12,7 +14,10 @@ export class TaskStore {
       settings: new Map(),
       sessions: new Map(),
       habits: new Map(),
-      habitLogs: new Map()
+      habitLogs: new Map(),
+      workspaces: new Map(),
+      workspace_members: new Map(),
+      task_comments: new Map()
     };
     
     // Subscriber callbacks per store
@@ -23,14 +28,17 @@ export class TaskStore {
       settings: new Set(),
       sessions: new Set(),
       habits: new Set(),
-      habitLogs: new Set()
+      habitLogs: new Set(),
+      workspaces: new Set(),
+      workspace_members: new Set(),
+      task_comments: new Set()
     };
   }
 
   // Initialize DB and load caches
   init() {
     return new Promise((resolve, reject) => {
-      const request = indexedDB.open(this.dbName, this.dbVersion);
+      const request = globalThis.indexedDB.open(this.dbName, this.dbVersion);
 
       request.onupgradeneeded = (event) => {
         const db = event.target.result;
@@ -55,6 +63,15 @@ export class TaskStore {
         if (!db.objectStoreNames.contains('habitLogs')) {
           db.createObjectStore('habitLogs', { keyPath: 'id' });
         }
+        if (!db.objectStoreNames.contains('workspaces')) {
+          db.createObjectStore('workspaces', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('workspace_members')) {
+          db.createObjectStore('workspace_members', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('task_comments')) {
+          db.createObjectStore('task_comments', { keyPath: 'id' });
+        }
       };
 
       request.onsuccess = async (event) => {
@@ -68,6 +85,11 @@ export class TaskStore {
           await this._warmCache('sessions');
           await this._warmCache('habits');
           await this._warmCache('habitLogs');
+          await this._warmCache('workspaces');
+          await this._warmCache('workspace_members');
+          await this._warmCache('task_comments');
+          
+          this.setupRealtime();
           resolve();
         } catch (err) {
           reject(err);
@@ -128,6 +150,8 @@ export class TaskStore {
     this.caches[storeName].set(id, data);
     this._notify(storeName);
 
+    this._syncUpSingle(storeName, data);
+
     // Save to IndexedDB asynchronously
     return new Promise((resolve, reject) => {
       const tx = this.db.transaction(storeName, 'readwrite');
@@ -143,6 +167,8 @@ export class TaskStore {
     // Update cache synchronously
     this.caches[storeName].delete(id);
     this._notify(storeName);
+
+    this._syncDeleteSingle(storeName, id);
 
     // Delete from IndexedDB asynchronously
     return new Promise((resolve, reject) => {
@@ -182,6 +208,252 @@ export class TaskStore {
       } catch (err) {
         console.error('Subscription error:', err);
       }
+    }
+  }
+
+  // Supabase sync Up
+  async _syncUpSingle(storeName, data) {
+    if (!supabase) return;
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const user = sessionRes?.data?.session?.user;
+      if (!user) return;
+
+      if (storeName === 'tasks') {
+        await supabase.from('tasks').upsert({
+          id: data.id,
+          user_id: user.id,
+          project_id: data.projectId || null,
+          title: data.title,
+          notes: data.notes || null,
+          completed: !!data.completed,
+          due_date: data.dueDate || null,
+          start_date: data.startDate || null,
+          priority: data.priority || null,
+          assignee_id: data.assigneeId || null,
+          assignee_email: data.assigneeEmail || null,
+          checklist_items: data.checklistItems || [],
+          tags: data.tags || []
+        });
+      } else if (storeName === 'projects') {
+        await supabase.from('projects').upsert({
+          id: data.id,
+          user_id: user.id,
+          workspace_id: data.workspaceId || null,
+          name: data.name,
+          area_id: data.areaId || null,
+          status: data.status || 'active'
+        });
+      } else if (storeName === 'areas') {
+        await supabase.from('areas').upsert({
+          id: data.id,
+          user_id: user.id,
+          name: data.name,
+          icon: data.icon
+        });
+      } else if (storeName === 'workspaces') {
+        await supabase.from('workspaces').upsert({
+          id: data.id,
+          name: data.name,
+          owner_id: user.id
+        });
+      } else if (storeName === 'task_comments') {
+        await supabase.from('task_comments').upsert({
+          id: data.id,
+          task_id: data.taskId,
+          user_id: user.id,
+          user_email: user.email || 'Anonymous',
+          content: data.content
+        });
+      }
+    } catch (err) {
+      console.warn('Sync up failed:', err.message);
+    }
+  }
+
+  // Supabase sync delete
+  async _syncDeleteSingle(storeName, id) {
+    if (!supabase) return;
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const user = sessionRes?.data?.session?.user;
+      if (!user) return;
+
+      if (['tasks', 'projects', 'areas', 'workspaces', 'task_comments'].includes(storeName)) {
+        await supabase.from(storeName).delete().eq('id', id);
+      }
+    } catch (err) {
+      console.warn('Sync delete failed:', err.message);
+    }
+  }
+
+  // Pull all data from Supabase
+  async syncDownAll() {
+    if (!supabase) return;
+    try {
+      const sessionRes = await supabase.auth.getSession();
+      const user = sessionRes?.data?.session?.user;
+      if (!user) return;
+
+      // Pull areas
+      const { data: areas } = await supabase.from('areas').select('*');
+      if (areas) {
+        for (const a of areas) {
+          await this._putLocal('areas', { id: a.id, name: a.name, icon: a.icon, createdAt: new Date(a.created_at).getTime() });
+        }
+      }
+
+      // Pull projects
+      const { data: projects } = await supabase.from('projects').select('*');
+      if (projects) {
+        for (const p of projects) {
+          await this._putLocal('projects', { id: p.id, name: p.name, workspaceId: p.workspace_id, areaId: p.area_id, status: p.status, createdAt: new Date(p.created_at).getTime() });
+        }
+      }
+
+      // Pull tasks
+      const { data: tasks } = await supabase.from('tasks').select('*');
+      if (tasks) {
+        for (const t of tasks) {
+          await this._putLocal('tasks', {
+            id: t.id,
+            projectId: t.project_id,
+            title: t.title,
+            notes: t.notes,
+            completed: t.completed,
+            dueDate: t.due_date,
+            startDate: t.start_date,
+            priority: t.priority,
+            assigneeId: t.assignee_id,
+            assigneeEmail: t.assignee_email,
+            checklistItems: t.checklist_items || [],
+            tags: t.tags || [],
+            createdAt: new Date(t.created_at).getTime(),
+            updatedAt: new Date(t.updated_at).getTime()
+          });
+        }
+      }
+
+      // Pull workspaces
+      const { data: workspaces } = await supabase.from('workspaces').select('*');
+      if (workspaces) {
+        for (const w of workspaces) {
+          await this._putLocal('workspaces', { id: w.id, name: w.name, ownerId: w.owner_id, createdAt: new Date(w.created_at).getTime() });
+        }
+      }
+
+      // Pull workspace members
+      const { data: members } = await supabase.from('workspace_members').select('*');
+      if (members) {
+        for (const m of members) {
+          await this._putLocal('workspace_members', { id: m.id, workspaceId: m.workspace_id, userId: m.user_id, email: m.email, role: m.role, joinedAt: new Date(m.joined_at).getTime() });
+        }
+      }
+
+      // Pull comments
+      const { data: comments } = await supabase.from('task_comments').select('*');
+      if (comments) {
+        for (const c of comments) {
+          await this._putLocal('task_comments', { id: c.id, taskId: c.task_id, userId: c.user_id, userEmail: c.user_email, content: c.content, createdAt: new Date(c.created_at).getTime() });
+        }
+      }
+    } catch (err) {
+      console.warn('Sync down failed:', err.message);
+    }
+  }
+
+  // Helper to write purely locally (without triggering sync up loops)
+  async _putLocal(storeName, data) {
+    const id = data.id || data.key;
+    this.caches[storeName].set(id, data);
+    this._notify(storeName);
+    return new Promise((resolve, reject) => {
+      const tx = this.db.transaction(storeName, 'readwrite');
+      const store = tx.objectStore(storeName);
+      const req = store.put(data);
+      req.onsuccess = () => resolve(req.result);
+      req.onerror = () => reject(req.error);
+    });
+  }
+
+  // Setup real-time listeners
+  setupRealtime() {
+    if (!supabase) return;
+    try {
+      supabase.channel('schema-db-changes')
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'tasks' }, payload => {
+          this._handleRemoteChange('tasks', payload);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'projects' }, payload => {
+          this._handleRemoteChange('projects', payload);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'task_comments' }, payload => {
+          this._handleRemoteChange('task_comments', payload);
+        })
+        .on('postgres_changes', { event: '*', schema: 'public', table: 'workspace_members' }, payload => {
+          this._handleRemoteChange('workspace_members', payload);
+        })
+        .subscribe();
+    } catch (err) {
+      console.warn('Supabase real-time setup failed:', err.message);
+    }
+  }
+
+  async _handleRemoteChange(storeName, payload) {
+    const { eventType, new: newRecord, old: oldRecord } = payload;
+    if (eventType === 'DELETE') {
+      this.caches[storeName].delete(oldRecord.id);
+      this._notify(storeName);
+      const tx = this.db.transaction(storeName, 'readwrite');
+      tx.objectStore(storeName).delete(oldRecord.id);
+    } else {
+      let localRecord = {};
+      if (storeName === 'tasks') {
+        localRecord = {
+          id: newRecord.id,
+          projectId: newRecord.project_id,
+          title: newRecord.title,
+          notes: newRecord.notes,
+          completed: newRecord.completed,
+          dueDate: newRecord.due_date,
+          startDate: newRecord.start_date,
+          priority: newRecord.priority,
+          assigneeId: newRecord.assignee_id,
+          assigneeEmail: newRecord.assignee_email,
+          checklistItems: newRecord.checklist_items || [],
+          tags: newRecord.tags || [],
+          createdAt: new Date(newRecord.created_at).getTime(),
+          updatedAt: new Date(newRecord.updated_at).getTime()
+        };
+      } else if (storeName === 'projects') {
+        localRecord = {
+          id: newRecord.id,
+          name: newRecord.name,
+          workspaceId: newRecord.workspace_id,
+          areaId: newRecord.area_id,
+          status: newRecord.status,
+          createdAt: new Date(newRecord.created_at).getTime()
+        };
+      } else if (storeName === 'task_comments') {
+        localRecord = {
+          id: newRecord.id,
+          taskId: newRecord.task_id,
+          userId: newRecord.user_id,
+          userEmail: newRecord.user_email,
+          content: newRecord.content,
+          createdAt: new Date(newRecord.created_at).getTime()
+        };
+      } else if (storeName === 'workspace_members') {
+        localRecord = {
+          id: newRecord.id,
+          workspaceId: newRecord.workspace_id,
+          userId: newRecord.user_id,
+          email: newRecord.email,
+          role: newRecord.role,
+          joinedAt: new Date(newRecord.joined_at).getTime()
+        };
+      }
+      await this._putLocal(storeName, localRecord);
     }
   }
 

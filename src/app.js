@@ -1,7 +1,10 @@
 import { TaskStore } from './store.js';
-import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView, PomodoroView, FocusView, HabitsView, KanbanView } from './components/views.js';
+import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView, PomodoroView, FocusView, HabitsView, KanbanView, AuthView, WorkspacesView, WorkloadView, AnalyticsView, EisenhowerView } from './components/views.js';
 import { QuickEntry } from './components/quickentry.js';
 import { Notifier } from './utils.js';
+import { supabase } from './supabase.js';
+
+export let currentUser = null;
 
 export const store = new TaskStore();
 export const notifier = new Notifier(store);
@@ -43,6 +46,10 @@ const NAV_ITEMS = [
   { route: 'habits',   label: 'Habits',   icon: '🔥' },
   { route: 'pomodoro', label: 'Pomodoro', icon: '⏱️' },
   { route: 'kanban',   label: 'Kanban',   icon: '🗂️' },
+  { route: 'eisenhower', label: 'Matrix', icon: '⚡' },
+  { route: 'workspaces', label: 'Teams',  icon: '👥' },
+  { route: 'workload', label: 'Workload', icon: '📊' },
+  { route: 'analytics', label: 'Analytics', icon: '📈' },
   { route: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -57,6 +64,7 @@ function renderSidebar() {
   if (!nav.dataset.built) {
     nav.innerHTML = '';
     for (const item of NAV_ITEMS) {
+      if (!currentUser && ['workspaces', 'workload'].includes(item.route)) continue;
       const a = document.createElement('a');
       a.href = `#${item.route}`;
       a.className = 'sidebar-link';
@@ -64,6 +72,33 @@ function renderSidebar() {
       a.innerHTML = `<span class="sidebar-icon">${item.icon}</span><span class="sidebar-label">${item.label}</span>`;
       nav.appendChild(a);
     }
+    
+    // Add Auth/Logout action at bottom of sidebar
+    const divider = document.createElement('div');
+    divider.className = 'sidebar-divider';
+    divider.style.borderTop = '1px solid var(--border)';
+    divider.style.margin = 'var(--spacing-sm) 0';
+    nav.appendChild(divider);
+    
+    const authLink = document.createElement('a');
+    if (currentUser) {
+      authLink.href = '#';
+      authLink.className = 'sidebar-link auth-status-link';
+      authLink.innerHTML = `<span class="sidebar-icon">👤</span><span class="sidebar-label">Logout (${currentUser.email.split('@')[0]})</span>`;
+      authLink.addEventListener('click', async (e) => {
+        e.preventDefault();
+        if (supabase) {
+          await supabase.auth.signOut();
+          window.location.hash = '#auth';
+        }
+      });
+    } else {
+      authLink.href = '#auth';
+      authLink.className = 'sidebar-link auth-status-link';
+      authLink.innerHTML = `<span class="sidebar-icon">🔑</span><span class="sidebar-label">Login / Sync</span>`;
+    }
+    nav.appendChild(authLink);
+    
     nav.dataset.built = '1';
   }
 
@@ -132,7 +167,29 @@ const views = {
       projects[proj.id] = proj;
     }
     return KanbanView(tasks, projects, store);
-  }
+  },
+  eisenhower: () => {
+    const tasks = store.getAllCached('tasks');
+    return EisenhowerView(tasks, store);
+  },
+  workspaces: () => {
+    if (!currentUser) {
+      window.location.hash = '#auth';
+      return document.createElement('div');
+    }
+    return WorkspacesView(store);
+  },
+  workload: () => {
+    if (!currentUser) {
+      window.location.hash = '#auth';
+      return document.createElement('div');
+    }
+    return WorkloadView(store);
+  },
+  analytics: () => {
+    return AnalyticsView(store);
+  },
+  auth: () => AuthView(store)
 };
 
 // Route switching logic
@@ -213,6 +270,23 @@ async function initApp() {
         document.body.classList.add('light-theme');
         document.body.classList.remove('dark-theme');
       }
+    }
+
+    // 3b. Setup Supabase Auth state listener
+    if (supabase) {
+      supabase.auth.onAuthStateChange((event, session) => {
+        currentUser = session?.user || null;
+        const nav = document.getElementById('sidebar-nav');
+        if (nav) delete nav.dataset.built;
+        renderSidebar();
+        if (appInitialized) navigate();
+      });
+      supabase.auth.getSession().then(({ data }) => {
+        currentUser = data?.session?.user || null;
+        const nav = document.getElementById('sidebar-nav');
+        if (nav) delete nav.dataset.built;
+        renderSidebar();
+      });
     }
 
     // Set up subscriptions

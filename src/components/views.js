@@ -3,6 +3,7 @@ import { DailyBriefing } from '../utils.js';
 import { PomodoroWidget } from './pomodoro.js';
 import { HabitsView } from './habits.js';
 import { KanbanView } from './kanban.js';
+import { supabase } from '../supabase.js';
 
 function createSplitLayoutView(viewClass, headingText, tasks, projects) {
   const el = document.createElement('div');
@@ -565,5 +566,70 @@ export function FocusView(taskId, store) {
   return el;
 }
 
+export function AuthView(store) {
+  const el = document.createElement('div');
+  el.className = 'auth-view-container';
+  
+  el.innerHTML = `
+    <div class="auth-card">
+      <h2>Welcome to Cognify</h2>
+      <p class="auth-subtitle">Sign in or sign up to sync your tasks</p>
+      <input class="auth-email" type="email" placeholder="Email" />
+      <input class="auth-password" type="password" placeholder="Password" />
+      <div class="auth-actions">
+        <button class="auth-login-btn">Log In</button>
+        <button class="auth-register-btn">Sign Up</button>
+      </div>
+      <p class="auth-error-msg" style="color: red; margin-top: 10px;"></p>
+    </div>
+  `;
+  
+  const emailInput = el.querySelector('.auth-email');
+  const passInput = el.querySelector('.auth-password');
+  const loginBtn = el.querySelector('.auth-login-btn');
+  const registerBtn = el.querySelector('.auth-register-btn');
+  const errorMsg = el.querySelector('.auth-error-msg');
+  
+  async function handleAuth(action) {
+    if (!supabase) {
+      errorMsg.textContent = 'Supabase client is not initialized';
+      return;
+    }
+    const email = emailInput.value.trim();
+    const password = passInput.value;
+    if (!email || !password) {
+      errorMsg.textContent = 'Please fill in all fields';
+      return;
+    }
+    
+    errorMsg.textContent = '';
+    try {
+      let result;
+      if (action === 'login') {
+        result = await supabase.auth.signInWithPassword({ email, password });
+      } else {
+        result = await supabase.auth.signUp({ email, password });
+      }
+      
+      if (result.error) {
+        errorMsg.textContent = result.error.message;
+      } else {
+        window.location.hash = '#today';
+      }
+    } catch (err) {
+      errorMsg.textContent = err.message;
+    }
+  }
+  
+  loginBtn.addEventListener('click', () => handleAuth('login'));
+  registerBtn.addEventListener('click', () => handleAuth('register'));
+  
+  return el;
+}
+
 export { HabitsView, KanbanView };
+export { WorkspacesView } from './workspaces.js';
+export { WorkloadView } from './workload.js';
+export { AnalyticsView } from './analytics.js';
+export { EisenhowerView } from './eisenhower.js';
 
