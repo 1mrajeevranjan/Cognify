@@ -1,0 +1,17 @@
+{
+  "appId": "com.cognify.app",
+  "appName": "Cognify",
+  "webDir": "www",
+  "bundledWebRuntime": false,
+  "server": {
+    "allowNavigation": [
+      "*.supabase.co"
+    ]
+  },
+  "ios": {
+    "contentInset": "always",
+    "allowsLinkPreview": false,
+    "scrollEnabled": true,
+    "backgroundColor": "#faf8ff"
+  }
+}

@@ -1,0 +1,19 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+dist-electron/
+
+# Temp / scratch
+rewrite_css.py
+
+# macOS
+.DS_Store
+src/.DS_Store
+.gstack/
+
+# Xcode derived data (keep ios-app/ios/ tracked but not build artifacts)
+ios-app/ios/App/build/
+ios-app/ios/App/Pods/
+ios-app/ios/App/*.xcworkspace/xcuserdata/
+ios-app/ios/App/App/Capacitor/

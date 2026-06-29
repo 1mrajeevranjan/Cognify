@@ -1,13 +1,60 @@
 {
   "name": "cognify",
+  "productName": "Cognify",
   "version": "1.0.0",
-  "description": "Things 3-inspired offline-first personal task manager",
-  "main": "src/app.js",
-  "type": "module",
+  "description": "Offline-first personal task manager",
+  "main": "electron/main.js",
   "scripts": {
     "dev": "npx local-web-server --spa index.html",
+    "electron": "electron .",
+    "pack": "electron-builder --dir",
+    "dist": "electron-builder",
     "test": "node tests.js"
   },
-  "dependencies": {},
-  "devDependencies": {}
+  "build": {
+    "appId": "com.cognify.app",
+    "productName": "Cognify",
+    "copyright": "Copyright © 2024 Cognify",
+    "mac": {
+      "category": "public.app-category.productivity",
+      "icon": "icon.png",
+      "hardenedRuntime": true,
+      "gatekeeperAssess": false,
+      "target": [
+        {
+          "target": "dmg",
+          "arch": [
+            "arm64",
+            "x64"
+          ]
+        }
+      ]
+    },
+    "dmg": {
+      "title": "Cognify",
+      "background": null,
+      "window": {
+        "width": 540,
+        "height": 380
+      }
+    },
+    "files": [
+      "index.html",
+      "css/**",
+      "src/**",
+      "lib/**",
+      "manifest.json",
+      "sw.js",
+      "icon.png",
+      "logo.png",
+      "electron/**"
+    ],
+    "directories": {
+      "output": "dist-electron"
+    }
+  },
+  "devDependencies": {
+    "electron": "^31.7.7",
+    "electron-builder": "^25.1.8"
+  }
 }
