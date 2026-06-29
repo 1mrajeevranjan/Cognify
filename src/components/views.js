@@ -1,4 +1,8 @@
 import { TaskList, TaskItem, TaskDetailPanel } from './item.js';
+import { DailyBriefing } from '../utils.js';
+import { PomodoroWidget } from './pomodoro.js';
+import { HabitsView } from './habits.js';
+import { KanbanView } from './kanban.js';
 
 function createSplitLayoutView(viewClass, headingText, tasks, projects) {
   const el = document.createElement('div');
@@ -56,7 +60,55 @@ function createSplitLayoutView(viewClass, headingText, tasks, projects) {
 }
 
 export function TodayView(tasks, projects = {}) {
-  return createSplitLayoutView('today-view-container', 'Today', tasks, projects);
+  const el = createSplitLayoutView('today-view-container', 'Today', tasks, projects);
+  
+  if (tasks && tasks.length > 0) {
+    const briefing = new DailyBriefing(null);
+    const suggested = briefing.suggest(tasks);
+    if (suggested.length > 0) {
+      const card = document.createElement('div');
+      card.className = 'briefing-card';
+      
+      const greeting = document.createElement('div');
+      greeting.className = 'briefing-greeting';
+      greeting.textContent = briefing.greeting();
+      card.appendChild(greeting);
+      
+      const subtitle = document.createElement('p');
+      subtitle.className = 'briefing-subtitle';
+      subtitle.textContent = 'Suggested focus for today:';
+      card.appendChild(subtitle);
+      
+      const list = document.createElement('ol');
+      list.className = 'briefing-list';
+      for (const task of suggested) {
+        const li = document.createElement('li');
+        li.className = 'briefing-task-item';
+        li.textContent = task.title;
+        li.style.cursor = 'pointer';
+        li.addEventListener('click', () => {
+          el.dispatchEvent(new CustomEvent('task-selected', {
+            detail: { task, id: task.id },
+            bubbles: true
+          }));
+        });
+        list.appendChild(li);
+      }
+      card.appendChild(list);
+      
+      const listPane = el.querySelector('.list-pane');
+      if (listPane) {
+        const heading = listPane.querySelector('h1');
+        if (heading && heading.nextSibling) {
+          listPane.insertBefore(card, heading.nextSibling);
+        } else {
+          listPane.appendChild(card);
+        }
+      }
+    }
+  }
+  
+  return el;
 }
 
 export function InboxView(tasks, projects = {}) {
@@ -129,33 +181,94 @@ export function SettingsView(store) {
   themeSection.classList.add('settings-section');
   themeSection.innerHTML = `<h3>Appearance</h3>`;
   
-  const themeToggle = document.createElement('button');
-  themeToggle.classList.add('theme-toggle-btn');
-  themeToggle.textContent = 'Toggle Dark Mode';
-  themeToggle.addEventListener('click', () => {
-    const isCurrentlyDark = document.body.classList.contains('dark-theme') || 
-      (!document.body.classList.contains('light-theme') && window.matchMedia('(prefers-color-scheme: dark)').matches);
-    
-    if (isCurrentlyDark) {
-      document.body.classList.remove('dark-theme');
-      document.body.classList.add('light-theme');
-      if (store) {
-        store.put('settings', { key: 'theme', value: 'light' });
+  const THEMES = [
+    { name: 'light', label: 'Light', color: '#f5f5f7' },
+    { name: 'dark', label: 'Dark', color: '#1a1d24' },
+    { name: 'sepia', label: 'Sepia', color: '#f0ebe0' },
+    { name: 'ocean', label: 'Ocean', color: '#0e1a26' },
+    { name: 'forest', label: 'Forest', color: '#111c13' },
+    { name: 'rose', label: 'Rose', color: '#f7f0f2' }
+  ];
+
+  const swatchRow = document.createElement('div');
+  swatchRow.className = 'theme-swatch-row';
+
+  const currentTheme = store ? (store.getCached('settings', 'theme')?.value || 'light') : 'light';
+
+  for (const theme of THEMES) {
+    const swatch = document.createElement('button');
+    swatch.className = 'theme-swatch' + (theme.name === currentTheme ? ' theme-swatch-active' : '');
+    swatch.title = theme.label;
+    swatch.style.background = theme.color;
+    swatch.setAttribute('data-theme-name', theme.name);
+    swatch.addEventListener('click', () => {
+      document.documentElement.setAttribute('data-theme', theme.name);
+      if (theme.name === 'light') {
+        document.documentElement.removeAttribute('data-theme');
       }
-    } else {
-      document.body.classList.remove('light-theme');
-      document.body.classList.add('dark-theme');
-      if (store) {
-        store.put('settings', { key: 'theme', value: 'dark' });
-      }
-    }
-  });
-  themeSection.appendChild(themeToggle);
+      document.body.classList.remove('dark-theme', 'light-theme');
+      if (theme.name === 'dark') document.body.classList.add('dark-theme');
+      if (store) store.put('settings', { key: 'theme', value: theme.name });
+      swatchRow.querySelectorAll('.theme-swatch').forEach(s => s.classList.remove('theme-swatch-active'));
+      swatch.classList.add('theme-swatch-active');
+    });
+    swatchRow.appendChild(swatch);
+  }
+  themeSection.appendChild(swatchRow);
   el.appendChild(themeSection);
+
+  // AI Settings Section
+  const aiSection = document.createElement('div');
+  aiSection.className = 'settings-section';
+  aiSection.innerHTML = `<h3>AI Settings</h3>`;
+  const keyLabel = document.createElement('label');
+  keyLabel.textContent = 'Gemini API Key';
+  keyLabel.style.display = 'block';
+  keyLabel.style.marginBottom = 'var(--spacing-xs)';
+  const keyInput = document.createElement('input');
+  keyInput.type = 'password';
+  keyInput.className = 'gemini-key-input';
+  keyInput.placeholder = 'AIza...';
+  keyInput.style.display = 'block';
+  keyInput.style.width = '100%';
+  keyInput.style.padding = 'var(--spacing-sm)';
+  keyInput.style.marginBottom = 'var(--spacing-sm)';
+  keyInput.style.border = '1px solid var(--border)';
+  keyInput.style.borderRadius = '6px';
+  keyInput.style.background = 'var(--surface)';
+  keyInput.style.color = 'var(--foreground)';
+  if (store) {
+    const existing = store.getCached('settings', 'gemini-api-key');
+    if (existing && existing.value) keyInput.value = existing.value;
+  }
+  const keyHint = document.createElement('small');
+  keyHint.textContent = 'Get a free key at aistudio.google.com';
+  keyHint.style.display = 'block';
+  keyHint.style.color = 'var(--foreground-muted)';
+  keyHint.style.marginBottom = 'var(--spacing-sm)';
+  const saveKeyBtn = document.createElement('button');
+  saveKeyBtn.className = 'save-key-btn';
+  saveKeyBtn.textContent = 'Save API Key';
+  saveKeyBtn.style.padding = 'var(--spacing-sm) var(--spacing-md)';
+  saveKeyBtn.style.background = 'var(--accent)';
+  saveKeyBtn.style.color = 'white';
+  saveKeyBtn.style.border = 'none';
+  saveKeyBtn.style.borderRadius = '6px';
+  saveKeyBtn.style.cursor = 'pointer';
+  saveKeyBtn.addEventListener('click', () => {
+    if (store) store.put('settings', { key: 'gemini-api-key', value: keyInput.value });
+    saveKeyBtn.textContent = 'Saved!';
+    setTimeout(() => { saveKeyBtn.textContent = 'Save API Key'; }, 2000);
+  });
+  aiSection.appendChild(keyLabel);
+  aiSection.appendChild(keyInput);
+  aiSection.appendChild(keyHint);
+  aiSection.appendChild(saveKeyBtn);
+  el.appendChild(aiSection);
 
   // Backup Import/Export section
   const backupSection = document.createElement('div');
-  backupSection.classList.add('settings-section');
+  backupSection.className = 'settings-section';
   backupSection.innerHTML = `<h3>Data Portability</h3>`;
 
   const exportBtn = document.createElement('button');
@@ -219,9 +332,53 @@ export function SettingsView(store) {
     };
     reader.readAsText(file);
   });
-
   backupSection.appendChild(importInput);
   backupSection.appendChild(importBtn);
+
+  // Todoist import
+  const todoistInput = document.createElement('input');
+  todoistInput.type = 'file';
+  todoistInput.accept = '.json';
+  todoistInput.style.display = 'none';
+  const todoistBtn = document.createElement('button');
+  todoistBtn.className = 'todoist-import-btn';
+  todoistBtn.textContent = 'Import from Todoist';
+  todoistBtn.addEventListener('click', () => todoistInput.click());
+  const importResultDiv = document.createElement('div');
+  importResultDiv.className = 'import-result-toast';
+  importResultDiv.style.marginTop = 'var(--spacing-sm)';
+  importResultDiv.style.color = 'var(--accent)';
+  importResultDiv.style.fontWeight = '500';
+  todoistInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const { importTodoist } = await import('../import.js');
+    const text = await file.text();
+    const result = await importTodoist(text, store);
+    importResultDiv.textContent = `✅ Imported ${result.imported} tasks, skipped ${result.skipped} duplicates.`;
+  });
+  backupSection.appendChild(todoistInput);
+  backupSection.appendChild(todoistBtn);
+
+  // Notion import
+  const notionInput = document.createElement('input');
+  notionInput.type = 'file';
+  notionInput.accept = '.csv';
+  notionInput.style.display = 'none';
+  const notionBtn = document.createElement('button');
+  notionBtn.className = 'notion-import-btn';
+  notionBtn.textContent = 'Import from Notion';
+  notionBtn.addEventListener('click', () => notionInput.click());
+  notionInput.addEventListener('change', async (e) => {
+    const file = e.target.files[0]; if (!file) return;
+    const { importNotion } = await import('../import.js');
+    const text = await file.text();
+    const result = await importNotion(text, store);
+    importResultDiv.textContent = `✅ Imported ${result.imported} tasks, skipped ${result.skipped} duplicates.`;
+  });
+  backupSection.appendChild(notionInput);
+  backupSection.appendChild(notionBtn);
+  backupSection.appendChild(importResultDiv);
+
   el.appendChild(backupSection);
 
   // Clear data section
@@ -370,3 +527,43 @@ export function UpcomingView(tasks, projects = {}) {
 
   return el;
 }
+
+export function PomodoroView(store) {
+  const el = document.createElement('div');
+  el.className = 'pomodoro-view-container';
+  const h1 = document.createElement('h1');
+  h1.textContent = 'Pomodoro';
+  el.appendChild(h1);
+  const widget = PomodoroWidget({ store });
+  el.appendChild(widget);
+  
+  const log = document.createElement('div');
+  log.className = 'session-log';
+  const sessions = store ? store.getAllCached('sessions') : [];
+  const todayStr = new Date().toISOString().split('T')[0];
+  const todaySessions = sessions.filter(s => new Date(s.completedAt).toISOString().split('T')[0] === todayStr);
+  log.innerHTML = `<p class="session-count">Today: ${todaySessions.length} session${todaySessions.length !== 1 ? 's' : ''} completed</p>`;
+  el.appendChild(log);
+  return el;
+}
+
+export function FocusView(taskId, store) {
+  const el = document.createElement('div');
+  el.className = 'focus-view-container';
+  const task = store && taskId ? store.getCached('tasks', taskId) : null;
+  const h1 = document.createElement('h1');
+  h1.textContent = task ? task.title : 'Focus Mode';
+  el.appendChild(h1);
+  if (task && task.notes) {
+    const notes = document.createElement('p');
+    notes.className = 'focus-notes';
+    notes.textContent = task.notes;
+    el.appendChild(notes);
+  }
+  const widget = PomodoroWidget({ taskId, store });
+  el.appendChild(widget);
+  return el;
+}
+
+export { HabitsView, KanbanView };
+

@@ -784,5 +784,387 @@ body.dark-theme .clear-data-btn:hover {
   border-color: hsl(0, 50%, 35%) !important;
 }
 
+/* Theme presets */
+:root[data-theme="dark"] {
+  --background: hsl(220, 20%, 10%);
+  --sidebar-background: hsl(220, 20%, 7%);
+  --foreground: hsl(0, 0%, 90%);
+  --foreground-muted: hsl(0, 0%, 60%);
+  --border: hsl(220, 15%, 18%);
+  --border-focus: hsl(227, 91%, 60%);
+  --surface: hsl(220, 20%, 13%);
+  --selection: hsl(227, 30%, 20%);
+  --accent-muted: hsl(227, 30%, 18%);
+}
+:root[data-theme="sepia"] {
+  --background: hsl(35, 30%, 94%);
+  --sidebar-background: hsl(35, 25%, 90%);
+  --foreground: hsl(25, 30%, 20%);
+  --foreground-muted: hsl(25, 20%, 45%);
+  --border: hsl(35, 20%, 82%);
+  --border-focus: hsl(28, 60%, 50%);
+  --surface: hsl(35, 30%, 97%);
+  --selection: hsl(35, 40%, 88%);
+  --accent-muted: hsl(28, 40%, 88%);
+  --accent: hsl(28, 60%, 40%);
+}
+:root[data-theme="ocean"] {
+  --background: hsl(210, 30%, 12%);
+  --sidebar-background: hsl(210, 30%, 9%);
+  --foreground: hsl(200, 20%, 90%);
+  --foreground-muted: hsl(200, 15%, 60%);
+  --border: hsl(210, 25%, 20%);
+  --border-focus: hsl(195, 80%, 50%);
+  --surface: hsl(210, 28%, 15%);
+  --selection: hsl(195, 40%, 20%);
+  --accent-muted: hsl(195, 40%, 18%);
+  --accent: hsl(195, 80%, 50%);
+}
+:root[data-theme="forest"] {
+  --background: hsl(130, 15%, 13%);
+  --sidebar-background: hsl(130, 15%, 10%);
+  --foreground: hsl(120, 10%, 88%);
+  --foreground-muted: hsl(120, 8%, 58%);
+  --border: hsl(130, 12%, 22%);
+  --border-focus: hsl(145, 55%, 45%);
+  --surface: hsl(130, 13%, 16%);
+  --selection: hsl(145, 30%, 20%);
+  --accent-muted: hsl(145, 30%, 18%);
+  --accent: hsl(145, 55%, 45%);
+}
+:root[data-theme="rose"] {
+  --background: hsl(345, 30%, 97%);
+  --sidebar-background: hsl(345, 25%, 93%);
+  --foreground: hsl(340, 25%, 20%);
+  --foreground-muted: hsl(340, 15%, 50%);
+  --border: hsl(345, 20%, 85%);
+  --border-focus: hsl(340, 60%, 50%);
+  --surface: hsl(345, 30%, 100%);
+  --selection: hsl(340, 40%, 92%);
+  --accent-muted: hsl(340, 40%, 92%);
+  --accent: hsl(340, 60%, 50%);
+}
+
+/* Pomodoro styles */
+.pomodoro-view-container {
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.pomodoro-widget {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: var(--spacing-lg);
+  border-radius: 8px;
+  box-shadow: var(--shadow-sm);
+}
+.pomodoro-ring {
+  display: block;
+}
+.pomodoro-progress {
+  transition: stroke-dashoffset 1s linear;
+}
+.pomodoro-controls {
+  display: flex;
+  gap: var(--spacing-sm);
+}
+.pomodoro-start-btn, .pomodoro-stop-btn {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: 6px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--foreground);
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-size: 0.9rem;
+  font-weight: 500;
+}
+.pomodoro-start-btn {
+  background: var(--accent);
+  color: white;
+  border-color: var(--accent);
+}
+.session-log {
+  color: var(--foreground-muted);
+  font-size: 0.9rem;
+}
+.focus-view-container {
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--spacing-lg);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.focus-notes {
+  color: var(--foreground-muted);
+  max-width: 500px;
+  text-align: center;
+  font-size: 0.95rem;
+}
+
+/* Habits styles */
+.habits-view-container {
+  padding: var(--spacing-xl);
+  max-width: 600px;
+  margin: 0 auto;
+}
+.add-habit-form {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  margin-bottom: var(--spacing-lg);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: var(--spacing-md);
+  border-radius: 8px;
+}
+.habit-title-input {
+  padding: var(--spacing-sm);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--background);
+  color: var(--foreground);
+  font-family: var(--font-sans);
+  font-size: 0.95rem;
+}
+.habit-icons {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+}
+.habit-icon-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: 6px 10px;
+  cursor: pointer;
+  font-size: 1.2rem;
+  transition: all 0.15s;
+}
+.habit-icon-btn.selected {
+  border-color: var(--accent);
+  background: var(--accent-muted);
+}
+.add-habit-btn {
+  padding: var(--spacing-sm) var(--spacing-md);
+  background: var(--accent);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-family: var(--font-sans);
+  font-weight: 500;
+  align-self: flex-start;
+}
+.habits-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+.habit-row {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-md);
+  padding: var(--spacing-md);
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+}
+.habit-icon {
+  font-size: 1.4rem;
+}
+.habit-title-text {
+  flex: 1;
+  font-weight: 500;
+}
+.habit-streak {
+  color: var(--foreground-muted);
+  font-size: 0.9rem;
+}
+.habit-check-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: 2px solid var(--border);
+  background: var(--background);
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.15s;
+}
+.habit-check-btn.checked {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: white;
+}
+
+/* Mic and Breakdown buttons in Quick Entry */
+.mic-btn, .breakdown-btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  width: 38px;
+  height: 38px;
+  cursor: pointer;
+  font-size: 1.1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  transition: all 0.15s;
+}
+.mic-btn:hover, .breakdown-btn:hover {
+  border-color: var(--accent);
+}
+.mic-btn.recording {
+  animation: mic-pulse 1s ease-in-out infinite;
+  border-color: hsl(0, 80%, 50%);
+  background: hsl(0, 80%, 97%);
+}
+@keyframes mic-pulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.1); }
+}
+
+/* Theme picker swatches */
+.theme-swatch-row {
+  display: flex;
+  gap: var(--spacing-sm);
+  flex-wrap: wrap;
+  margin-top: var(--spacing-sm);
+}
+.theme-swatch {
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 3px solid transparent;
+  cursor: pointer;
+  padding: 0;
+  box-shadow: var(--shadow-sm);
+  transition: transform 0.15s, border-color 0.15s;
+}
+.theme-swatch:hover {
+  transform: scale(1.1);
+}
+.theme-swatch-active {
+  border-color: var(--accent) !important;
+}
+
+/* Kanban board styles */
+.kanban-board {
+  display: flex;
+  gap: var(--spacing-md);
+  padding: var(--spacing-lg);
+  overflow-x: auto;
+  height: 100%;
+}
+.kanban-column {
+  flex: 1;
+  min-width: 280px;
+  max-width: 400px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  display: flex;
+  flex-direction: column;
+  max-height: calc(100vh - 120px);
+}
+.kanban-column-header {
+  padding: var(--spacing-md);
+  font-weight: 600;
+  font-size: 0.85rem;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--foreground-muted);
+  border-bottom: 1px solid var(--border);
+}
+.kanban-cards {
+  flex: 1;
+  padding: var(--spacing-sm);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+  overflow-y: auto;
+}
+.kanban-card {
+  background: var(--background);
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  padding: var(--spacing-md);
+  cursor: grab;
+  transition: border-color 0.15s, box-shadow 0.15s;
+}
+.kanban-card:hover {
+  border-color: var(--accent);
+  box-shadow: var(--shadow-sm);
+}
+.kanban-card-title {
+  font-weight: 500;
+  margin-bottom: var(--spacing-xs);
+}
+.kanban-card-meta {
+  display: flex;
+  gap: var(--spacing-xs);
+  flex-wrap: wrap;
+  font-size: 0.75rem;
+}
+.kanban-priority {
+  color: hsl(0, 80%, 50%);
+  font-weight: 600;
+}
+.kanban-tag {
+  color: var(--foreground-muted);
+}
+.kanban-column.drag-over {
+  background: var(--accent-muted);
+  border-style: dashed;
+  border-color: var(--accent);
+}
+
+/* Daily Briefing card */
+.briefing-card {
+  background: var(--accent-muted);
+  border-radius: 8px;
+  padding: var(--spacing-md);
+  margin-bottom: var(--spacing-md);
+  border: 1px solid var(--border);
+}
+.briefing-greeting {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--foreground);
+  margin-bottom: 4px;
+}
+.briefing-subtitle {
+  color: var(--foreground-muted);
+  font-size: 0.85rem;
+  margin-bottom: var(--spacing-sm);
+}
+.briefing-list {
+  padding-left: var(--spacing-lg);
+  font-size: 0.9rem;
+}
+.briefing-task-item {
+  padding: 4px 0;
+  font-weight: 500;
+}
+.briefing-task-item:hover {
+  color: var(--accent);
+  text-decoration: underline;
+}
+
+
 
 

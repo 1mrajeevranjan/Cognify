@@ -2,14 +2,17 @@ export class TaskStore {
   constructor() {
     this.db = null;
     this.dbName = 'CognifyDB';
-    this.dbVersion = 1;
+    this.dbVersion = 2;
     
     // In-memory caches for synchronous reads
     this.caches = {
       tasks: new Map(),
       projects: new Map(),
       areas: new Map(),
-      settings: new Map()
+      settings: new Map(),
+      sessions: new Map(),
+      habits: new Map(),
+      habitLogs: new Map()
     };
     
     // Subscriber callbacks per store
@@ -17,7 +20,10 @@ export class TaskStore {
       tasks: new Set(),
       projects: new Set(),
       areas: new Set(),
-      settings: new Set()
+      settings: new Set(),
+      sessions: new Set(),
+      habits: new Set(),
+      habitLogs: new Set()
     };
   }
 
@@ -40,6 +46,15 @@ export class TaskStore {
         if (!db.objectStoreNames.contains('settings')) {
           db.createObjectStore('settings', { keyPath: 'key' });
         }
+        if (!db.objectStoreNames.contains('sessions')) {
+          db.createObjectStore('sessions', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('habits')) {
+          db.createObjectStore('habits', { keyPath: 'id' });
+        }
+        if (!db.objectStoreNames.contains('habitLogs')) {
+          db.createObjectStore('habitLogs', { keyPath: 'id' });
+        }
       };
 
       request.onsuccess = async (event) => {
@@ -50,6 +65,9 @@ export class TaskStore {
           await this._warmCache('projects');
           await this._warmCache('areas');
           await this._warmCache('settings');
+          await this._warmCache('sessions');
+          await this._warmCache('habits');
+          await this._warmCache('habitLogs');
           resolve();
         } catch (err) {
           reject(err);

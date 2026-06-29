@@ -140,3 +140,49 @@ export class Notifier {
     }
   }
 }
+
+export class VoiceCapture {
+  start() {
+    return new Promise((resolve, reject) => {
+      const SR = globalThis.SpeechRecognition || globalThis.webkitSpeechRecognition;
+      if (!SR) { reject(new Error('not-supported')); return; }
+      const rec = new SR();
+      rec.interimResults = false;
+      rec.maxAlternatives = 1;
+      rec.onresult = (e) => resolve(e.results[0][0].transcript);
+      rec.onerror = (e) => reject(new Error(e.error));
+      rec.start();
+    });
+  }
+}
+
+export class DailyBriefing {
+  constructor(store) { this.store = store; }
+
+  score(task) {
+    const priorityPts = { P1: 30, P2: 20, P3: 10 };
+    let pts = priorityPts[task.priority] || 0;
+    if (task.dueDate) {
+      const today = new Date().toISOString().split('T')[0];
+      if (task.dueDate < today) pts += 25;
+    } else {
+      pts -= 5;
+    }
+    return pts;
+  }
+
+  suggest(tasks) {
+    return [...(tasks || [])]
+      .filter(t => !t.completed)
+      .sort((a, b) => this.score(b) - this.score(a))
+      .slice(0, 5);
+  }
+
+  greeting() {
+    const h = new Date().getHours();
+    if (h < 12) return 'Good morning ☀️';
+    if (h < 17) return 'Good afternoon 🌤️';
+    return 'Good evening 🌙';
+  }
+}
+

@@ -364,5 +364,21 @@ export function TaskDetailPanel(task, callbacks = {}) {
   subtasksContainer.appendChild(addBtn);
   el.appendChild(subtasksContainer);
 
+  // Focus Mode Button
+  const focusBtn = document.createElement('a');
+  focusBtn.className = 'detail-focus-btn';
+  focusBtn.href = `#focus?id=${taskCopy.id}`;
+  focusBtn.textContent = '▶ Focus Mode';
+  focusBtn.style.display = 'inline-block';
+  focusBtn.style.marginTop = 'var(--spacing-md)';
+  focusBtn.style.padding = 'var(--spacing-sm) var(--spacing-md)';
+  focusBtn.style.background = 'var(--accent)';
+  focusBtn.style.color = 'white';
+  focusBtn.style.textDecoration = 'none';
+  focusBtn.style.borderRadius = '6px';
+  focusBtn.style.fontSize = '0.9rem';
+  focusBtn.style.fontWeight = '500';
+  el.appendChild(focusBtn);
+
   return el;
 }

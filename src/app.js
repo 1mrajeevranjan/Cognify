@@ -1,5 +1,5 @@
 import { TaskStore } from './store.js';
-import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView } from './components/views.js';
+import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView, PomodoroView, FocusView, HabitsView, KanbanView } from './components/views.js';
 import { QuickEntry } from './components/quickentry.js';
 import { Notifier } from './utils.js';
 
@@ -24,7 +24,7 @@ function openQuickEntry() {
       };
       await store.put('tasks', newTask);
     }
-  });
+  }, store);
   
   if (document.body && document.body.appendChild) {
     document.body.appendChild(entry);
@@ -40,6 +40,9 @@ const NAV_ITEMS = [
   { route: 'upcoming', label: 'Upcoming', icon: '📅' },
   { route: 'someday',  label: 'Someday',  icon: '🌤️' },
   { route: 'logbook',  label: 'Logbook',  icon: '✅' },
+  { route: 'habits',   label: 'Habits',   icon: '🔥' },
+  { route: 'pomodoro', label: 'Pomodoro', icon: '⏱️' },
+  { route: 'kanban',   label: 'Kanban',   icon: '🗂️' },
   { route: 'settings', label: 'Settings', icon: '⚙️' },
 ];
 
@@ -115,7 +118,21 @@ const views = {
     }
     return LogbookView(tasks, projects);
   },
-  settings: () => SettingsView(store)
+  settings: () => SettingsView(store),
+  pomodoro: () => PomodoroView(store),
+  focus: () => {
+    const taskId = new URLSearchParams(window.location.search || '').get('id');
+    return FocusView(taskId, store);
+  },
+  habits: () => HabitsView(store),
+  kanban: () => {
+    const tasks = store.getAllCached('tasks');
+    const projects = {};
+    for (const proj of store.getAllCached('projects')) {
+      projects[proj.id] = proj;
+    }
+    return KanbanView(tasks, projects, store);
+  }
 };
 
 // Route switching logic
@@ -187,7 +204,8 @@ async function initApp() {
 
     // Apply saved theme preference
     const themeSetting = store.getCached('settings', 'theme');
-    if (themeSetting) {
+    if (themeSetting && themeSetting.value) {
+      document.documentElement.setAttribute('data-theme', themeSetting.value);
       if (themeSetting.value === 'dark') {
         document.body.classList.add('dark-theme');
         document.body.classList.remove('light-theme');
@@ -202,6 +220,15 @@ async function initApp() {
       if (appInitialized) navigate();
     });
     store.subscribe('projects', () => {
+      if (appInitialized) navigate();
+    });
+    store.subscribe('sessions', () => {
+      if (appInitialized) navigate();
+    });
+    store.subscribe('habits', () => {
+      if (appInitialized) navigate();
+    });
+    store.subscribe('habitLogs', () => {
       if (appInitialized) navigate();
     });
 

@@ -138,7 +138,10 @@ class MockDatabase {
       ['tasks', new Map()],
       ['projects', new Map()],
       ['areas', new Map()],
-      ['settings', new Map()]
+      ['settings', new Map()],
+      ['sessions', new Map()],
+      ['habits', new Map()],
+      ['habitLogs', new Map()]
     ]);
   }
   transaction(storeNames, mode) {
@@ -231,11 +234,13 @@ runStoreTests().then(() => {
 }).then(() => {
   return runOnboardingAndSettingsTests();
 }).then(() => {
+  return runPhase2Tests();
+}).then(() => {
   return runFinalAudit();
 }).then(() => {
   console.log('');
   console.log('═══════════════════════════════════════════');
-  console.log('  ✅  ALL SYSTEMS PASS — Cognify Phase 1   ');
+  console.log('  ✅  ALL SYSTEMS PASS — Cognify Phase 2   ');
   console.log('═══════════════════════════════════════════');
   console.log('');
 }).catch(err => {
@@ -356,6 +361,16 @@ class MockElement {
     this._textContent = '';
     this.attributes = new Map();
     this.style = {};
+    this.dataset = {};
+  }
+  get className() {
+    return Array.from(this.classes).join(' ');
+  }
+  set className(val) {
+    this.classes.clear();
+    if (val) {
+      val.split(' ').forEach(cls => this.classes.add(cls));
+    }
   }
   get innerHTML() {
     if (this._innerHTML) return this._innerHTML;
@@ -366,6 +381,15 @@ class MockElement {
   }
   set innerHTML(val) {
     this._innerHTML = val;
+    this.children = [];
+    const classRegex = /class="([^"]+)"/g;
+    let match;
+    while ((match = classRegex.exec(val)) !== null) {
+      const classes = match[1].split(' ');
+      const dummyEl = new MockElement('div');
+      classes.forEach(c => dummyEl.classList.add(c));
+      this.appendChild(dummyEl);
+    }
   }
   get textContent() {
     if (this._textContent) return this._textContent;
@@ -987,7 +1011,7 @@ async function runFinalAudit() {
   }
   assert.ok(viewsJs.includes('get-started-btn'), 'OnboardingView must render get-started-btn');
   assert.ok(viewsJs.includes('clear-data-btn'), 'SettingsView must render clear-data-btn');
-  assert.ok(viewsJs.includes('theme-toggle-btn'), 'SettingsView must render theme-toggle-btn');
+  assert.ok(viewsJs.includes('theme-swatch'), 'SettingsView must render theme-swatch swatches');
   console.log('✓ views.js exports and view elements verified');
 
   // 5. sw.js implements install + fetch
@@ -1010,3 +1034,129 @@ async function runFinalAudit() {
 
   console.log('✓ All Task 10 Final Audit Checks Passed!');
 }
+
+async function runPhase2Tests() {
+  console.log('Running Phase 2 Core Feature Tests...');
+
+  // 1. Verify all new Phase 2 files exist
+  const newFiles = [
+    'src/components/pomodoro.js',
+    'src/components/habits.js',
+    'src/components/kanban.js',
+    'src/import.js',
+    'src/ai.js'
+  ];
+  for (const f of newFiles) {
+    assert.ok(fs.existsSync(path.resolve(f)), `Phase 2 required file missing: ${f}`);
+  }
+  console.log('✓ All Phase 2 source files present');
+
+  // 2. Test Pomodoro View and Widget Rendering
+  const { PomodoroWidget } = await import('./src/components/pomodoro.js');
+  const pomodoroWidget = PomodoroWidget();
+  assert.ok(pomodoroWidget, 'PomodoroWidget should return a DOM element');
+  assert.ok(pomodoroWidget.querySelector('.pomodoro-ring'), 'PomodoroWidget must render .pomodoro-ring');
+  assert.ok(pomodoroWidget.querySelector('.pomodoro-start-btn'), 'PomodoroWidget must render .pomodoro-start-btn');
+  console.log('✓ Pomodoro widget verified');
+
+  // 3. Test Habits View and Form Rendering
+  const { HabitsView } = await import('./src/components/habits.js');
+  const habitsView = HabitsView(null);
+  assert.ok(habitsView, 'HabitsView should return a DOM element');
+  assert.ok(habitsView.classList.contains('habits-view-container'), 'HabitsView must have .habits-view-container class');
+  assert.ok(habitsView.querySelector('.add-habit-btn'), 'HabitsView must have a habit add button');
+  console.log('✓ Habits view verified');
+
+  // 4. Test AI Task Breakdown and sort logic
+  const { breakdownTask, suggestDailyOrder } = await import('./src/ai.js');
+  const emptyRes = await breakdownTask('Buy bread', '');
+  assert.deepStrictEqual(emptyRes, [], 'breakdownTask with empty key returns []');
+  
+  // Test suggestDailyOrder handles empty lists
+  const emptySuggest = await suggestDailyOrder([], 'key');
+  assert.deepStrictEqual(emptySuggest, [], 'suggestDailyOrder handles empty list');
+  console.log('✓ AI gateway methods error boundaries verified');
+
+  // 5. Test VoiceCapture error boundaries
+  const { VoiceCapture } = await import('./src/utils.js');
+  const vc = new VoiceCapture();
+  assert.ok(typeof vc.start === 'function', 'VoiceCapture must have start() method');
+  // Re-save existing window variables if any
+  const oldSR = globalThis.SpeechRecognition;
+  const oldWSR = globalThis.webkitSpeechRecognition;
+  delete globalThis.SpeechRecognition;
+  delete globalThis.webkitSpeechRecognition;
+  try {
+    await vc.start();
+    assert.fail('Should reject when SpeechRecognition is not supported');
+  } catch (e) {
+    assert.strictEqual(e.message, 'not-supported', 'VoiceCapture rejects with not-supported when API is missing');
+  }
+  globalThis.SpeechRecognition = oldSR;
+  globalThis.webkitSpeechRecognition = oldWSR;
+  console.log('✓ VoiceCapture error boundaries verified');
+
+  // 6. Test Data Import (Todoist & Notion)
+  const { importTodoist, importNotion } = await import('./src/import.js');
+  let todoistTasks = [];
+  const mockStore = {
+    getAllCached: () => [],
+    put: async (storeName, val) => {
+      if (storeName === 'tasks') todoistTasks.push(val);
+    }
+  };
+  const todoistText = JSON.stringify({
+    items: [
+      { content: 'Todoist Task 1', priority: 4, due: { date: '2026-07-01' } },
+      { content: 'Todoist Task 2', priority: 1 }
+    ]
+  });
+  const tImport = await importTodoist(todoistText, mockStore);
+  assert.strictEqual(tImport.imported, 2, 'importTodoist should import 2 tasks');
+  assert.strictEqual(todoistTasks[0].title, 'Todoist Task 1', 'Imported Todoist task title maps correctly');
+  assert.strictEqual(todoistTasks[0].priority, 'P1', 'Todoist priority 4 maps to P1');
+
+  let notionTasks = [];
+  const mockNotionStore = {
+    getAllCached: () => [],
+    put: async (storeName, val) => {
+      if (storeName === 'tasks') notionTasks.push(val);
+    }
+  };
+  const csvText = `Name,Notes,Date,Tags,Status\nNotion Task 1,Some notes,2026-07-02,work,Done`;
+  const nImport = await importNotion(csvText, mockNotionStore);
+  assert.strictEqual(nImport.imported, 1, 'importNotion should import 1 task');
+  assert.strictEqual(notionTasks[0].title, 'Notion Task 1', 'Notion name maps to title');
+  assert.strictEqual(notionTasks[0].completed, true, 'Notion Status Done maps to completed: true');
+  console.log('✓ Todoist & Notion schema importers verified');
+
+  // 7. Test Kanban View
+  const { KanbanView } = await import('./src/components/kanban.js');
+  const kanbanTasks = [
+    { id: 'k1', title: 'Task 1', completed: false, dueDate: null },
+    { id: 'k2', title: 'Task 2', completed: false, dueDate: '2026-07-01' },
+    { id: 'k3', title: 'Task 3', completed: true, dueDate: null }
+  ];
+  const kanbanBoard = KanbanView(kanbanTasks, {}, null);
+  assert.ok(kanbanBoard.classList.contains('kanban-board'), 'KanbanView renders .kanban-board container');
+  const cols = kanbanBoard.querySelectorAll('.kanban-column');
+  assert.strictEqual(cols.length, 3, 'Kanban board has exactly 3 columns');
+  console.log('✓ Kanban board layout verified');
+
+  // 8. Test Daily Briefing suggestions & score algorithm
+  const { DailyBriefing } = await import('./src/utils.js');
+  const briefing = new DailyBriefing(null);
+  assert.deepStrictEqual(briefing.suggest([]), [], 'DailyBriefing returns empty suggestions for empty task list');
+  const tasksList = [
+    { id: 'b1', title: 'P2 Future Task', priority: 'P2', completed: false, dueDate: '2026-08-01' },
+    { id: 'b2', title: 'P1 Task', priority: 'P1', completed: false, dueDate: null },
+    { id: 'b3', title: 'Overdue Task', priority: 'P3', completed: false, dueDate: '2020-01-01' }
+  ];
+  const suggestions = briefing.suggest(tasksList);
+  assert.strictEqual(suggestions[0].id, 'b3', 'Overdue task scores highest (priority + overdue_bonus)');
+  assert.strictEqual(suggestions[1].id, 'b2', 'P1 task scores next');
+  console.log('✓ DailyBriefing local prioritization scoring verified');
+
+  console.log('✓ All Phase 2 Core Feature Tests Passed!');
+}
+
