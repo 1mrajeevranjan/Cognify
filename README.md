@@ -6,9 +6,9 @@
 
 *Things 3 aesthetics · Cross-platform · Offline-first · NLP capture · Local reminders*
 
-[![Phase](https://img.shields.io/badge/Phase-1%20Complete-brightgreen?style=flat-square)](https://github.com/1mrajeevranjan/Cognify)
+[![Phase](https://img.shields.io/badge/Phase-2%20Complete-brightgreen?style=flat-square)](https://github.com/1mrajeevranjan/Cognify)
 [![License](https://img.shields.io/badge/License-MIT-blue?style=flat-square)](LICENSE)
-[![Tests](https://img.shields.io/badge/Tests-33%20Passing-brightgreen?style=flat-square)](#testing)
+[![Tests](https://img.shields.io/badge/Tests-41%20Passing-brightgreen?style=flat-square)](#testing)
 [![PRD](https://img.shields.io/badge/PRD-v1.0-orange?style=flat-square)](Cognify_PRD_v1.0.md)
 [![PWA](https://img.shields.io/badge/PWA-Offline--ready-blueviolet?style=flat-square)](#pwa--offline)
 
