@@ -982,7 +982,7 @@ async function runFinalAudit() {
 
   // 4. views.js exports all required views
   const viewsJs = fs.readFileSync(path.resolve('src/components/views.js'), 'utf8');
-  for (const fn of ['TodayView', 'OnboardingView', 'SettingsView', 'UpcomingView']) {
+  for (const fn of ['TodayView', 'OnboardingView', 'SettingsView', 'UpcomingView', 'InboxView', 'SomedayView', 'LogbookView']) {
     assert.ok(viewsJs.includes(`export function ${fn}`), `views.js must export ${fn}`);
   }
   assert.ok(viewsJs.includes('get-started-btn'), 'OnboardingView must render get-started-btn');

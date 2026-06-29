@@ -1,5 +1,5 @@
 import { TaskStore } from './store.js';
-import { TodayView, OnboardingView, SettingsView, UpcomingView } from './components/views.js';
+import { TodayView, OnboardingView, SettingsView, UpcomingView, InboxView, SomedayView, LogbookView } from './components/views.js';
 import { QuickEntry } from './components/quickentry.js';
 import { Notifier } from './utils.js';
 
@@ -89,7 +89,7 @@ const views = {
     for (const proj of store.getAllCached('projects')) {
       projects[proj.id] = proj;
     }
-    return TodayView(tasks, projects);
+    return InboxView(tasks, projects);
   },
   upcoming: () => {
     const tasks = store.getAllCached('tasks');
@@ -99,8 +99,22 @@ const views = {
     }
     return UpcomingView(tasks, projects);
   },
-  someday: () => '<h1>Someday</h1>',
-  logbook: () => '<h1>Logbook</h1>',
+  someday: () => {
+    const tasks = store.getAllCached('tasks').filter(t => !t.completed && !t.dueDate);
+    const projects = {};
+    for (const proj of store.getAllCached('projects')) {
+      projects[proj.id] = proj;
+    }
+    return SomedayView(tasks, projects);
+  },
+  logbook: () => {
+    const tasks = store.getAllCached('tasks').filter(t => t.completed);
+    const projects = {};
+    for (const proj of store.getAllCached('projects')) {
+      projects[proj.id] = proj;
+    }
+    return LogbookView(tasks, projects);
+  },
   settings: () => SettingsView(store)
 };
 

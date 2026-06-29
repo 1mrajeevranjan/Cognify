@@ -59,6 +59,18 @@ export function TodayView(tasks, projects = {}) {
   return createSplitLayoutView('today-view-container', 'Today', tasks, projects);
 }
 
+export function InboxView(tasks, projects = {}) {
+  return createSplitLayoutView('inbox-view-container', 'Inbox', tasks, projects);
+}
+
+export function SomedayView(tasks, projects = {}) {
+  return createSplitLayoutView('someday-view-container', 'Someday', tasks, projects);
+}
+
+export function LogbookView(tasks, projects = {}) {
+  return createSplitLayoutView('logbook-view-container', 'Logbook', tasks, projects);
+}
+
 export function OnboardingView(store) {
   const el = document.createElement('div');
   el.classList.add('onboarding-view-container');
