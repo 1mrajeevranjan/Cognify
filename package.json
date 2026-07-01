@@ -40,7 +40,8 @@
     },
     "files": [
       "index.html",
-      "css/**",
+      "css/app.css",
+      "css/ios.css",
       "src/**",
       "lib/**",
       "manifest.json",

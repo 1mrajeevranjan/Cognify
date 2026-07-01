@@ -61,6 +61,8 @@ body {
   line-height: 1.5;
   /* macOS Electron: compensate for hiddenInset traffic lights */
   padding-top: env(titlebar-area-height, 0px);
+  /* Prevent iOS rubber-banding on body */
+  overscroll-behavior-y: none;
 }
 
 /* Electron-specific: push sidebar content below traffic lights */
@@ -1139,7 +1141,7 @@ body.dark-theme .clear-data-btn:hover {
   background: none;
   border: none;
   cursor: pointer;
-  padding: 8px;
+  padding: 10px; /* 44x44 tap target */
   color: var(--foreground);
   border-radius: 6px;
   display: flex;
@@ -1289,4 +1291,1213 @@ body.dark-theme .clear-data-btn:hover {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+}
+
+/* Redesign overrides */
+:root {
+  --background: #f3f5fb;
+  --sidebar-background: rgba(248, 250, 255, 0.78);
+  --foreground: #13203d;
+  --foreground-muted: #5c6781;
+  --accent: #2d6cff;
+  --accent-hover: #1e57dc;
+  --accent-muted: rgba(45, 108, 255, 0.14);
+  --accent-rgb: 45, 108, 255;
+  --surface: rgba(255, 255, 255, 0.82);
+  --surface-elevated: #ffffff;
+  --surface-rgb: 255, 255, 255;
+  --border: rgba(19, 32, 61, 0.1);
+  --border-strong: rgba(19, 32, 61, 0.16);
+  --selection: rgba(106, 71, 255, 0.12);
+  --shadow-sm: 0 16px 40px rgba(17, 30, 65, 0.08);
+  --shadow-md: 0 24px 56px rgba(17, 30, 65, 0.12);
+  --sidebar-width: 280px;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --background: #0c1427;
+    --sidebar-background: rgba(10, 18, 38, 0.82);
+    --foreground: #eef3ff;
+    --foreground-muted: #9cabc9;
+    --accent: #75a1ff;
+    --accent-hover: #8cb3ff;
+    --accent-muted: rgba(117, 161, 255, 0.2);
+    --accent-rgb: 117, 161, 255;
+    --surface: rgba(17, 28, 55, 0.78);
+    --surface-elevated: rgba(21, 34, 64, 0.94);
+    --surface-rgb: 21, 34, 64;
+    --border: rgba(238, 243, 255, 0.12);
+    --border-strong: rgba(238, 243, 255, 0.18);
+    --selection: rgba(140, 115, 255, 0.18);
+    --shadow-sm: 0 18px 40px rgba(0, 0, 0, 0.28);
+    --shadow-md: 0 28px 60px rgba(0, 0, 0, 0.34);
+  }
+}
+
+button,
+input,
+select,
+textarea {
+  font: inherit;
+}
+
+body {
+  min-height: 100vh;
+  background:
+    radial-gradient(circle at top left, rgba(0, 159, 255, 0.1), transparent 26%),
+    radial-gradient(circle at bottom right, rgba(135, 76, 255, 0.12), transparent 30%),
+    var(--background);
+  color: var(--foreground);
+}
+
+body.platform-macos {
+  background:
+    radial-gradient(circle at top left, rgba(0, 159, 255, 0.08), transparent 22%),
+    radial-gradient(circle at bottom right, rgba(255, 171, 71, 0.09), transparent 18%),
+    var(--background);
+}
+
+.app-container {
+  align-items: stretch;
+}
+
+.brand-logo {
+  display: block;
+  object-fit: contain;
+}
+
+.splash-brand {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  margin-bottom: var(--spacing-lg);
+}
+
+.splash-brand-logo {
+  width: 68px;
+  height: 68px;
+}
+
+.splash-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.splash-logo {
+  margin: 0;
+  color: var(--foreground);
+}
+
+.splash-tagline {
+  color: var(--foreground-muted);
+  font-size: 0.95rem;
+  font-weight: 500;
+}
+
+.sidebar-container {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  background: var(--sidebar-background);
+  backdrop-filter: blur(24px) saturate(140%);
+  -webkit-backdrop-filter: blur(24px) saturate(140%);
+  border-right: 1px solid var(--border);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.16);
+}
+
+.sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 0;
+  padding: 4px 0 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-brand-logo {
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+}
+
+.sidebar-brand-copy {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.sidebar-brand-title {
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.sidebar-brand-subtitle {
+  font-size: 0.8rem;
+  color: var(--foreground-muted);
+}
+
+#sidebar-nav {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.sidebar-link {
+  min-height: 40px;
+  padding: 10px 12px;
+  border-radius: 10px;
+  color: var(--foreground-muted);
+}
+
+.sidebar-link:hover {
+  background: rgba(255, 255, 255, 0.48);
+}
+
+.sidebar-link.active {
+  background: var(--accent-muted);
+  color: var(--accent);
+  box-shadow: inset 0 0 0 1px rgba(var(--accent-rgb), 0.12);
+}
+
+.sidebar-icon,
+.mobile-tab-icon {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.sidebar-icon svg,
+.mobile-tab-icon svg,
+.mobile-menu-btn svg,
+.mobile-quick-add svg {
+  width: 18px;
+  height: 18px;
+}
+
+.sidebar-divider {
+  margin: 10px 0;
+}
+
+.sidebar-quick-add {
+  min-height: 42px;
+  border: 1px solid transparent;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba(45, 108, 255, 0.94), rgba(110, 61, 255, 0.94));
+  color: #ffffff;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 28px rgba(68, 84, 180, 0.24);
+}
+
+.sidebar-quick-add:hover,
+.empty-cta-btn:hover,
+.settings-action-btn:hover,
+.add-workspace-btn:hover,
+.invite-btn:hover,
+.detail-focus-btn:hover,
+.send-comment-btn:hover,
+.auth-login-btn:hover,
+.auth-register-btn:hover {
+  transform: translateY(-1px);
+}
+
+.main-content {
+  padding: 28px 32px 36px;
+  background: transparent;
+}
+
+#view-container {
+  width: 100%;
+}
+
+.view-split-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 28px;
+}
+
+.view-split-layout:has(.detail-pane.open) {
+  grid-template-columns: minmax(0, 1fr) 360px;
+}
+
+.list-pane {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.list-pane > h1,
+.settings-view-container h1,
+.workspaces-view-container h1,
+.analytics-view-container h1,
+.pomodoro-view-container h1,
+.focus-view-container h1 {
+  font-size: 2rem;
+  font-weight: 700;
+  letter-spacing: 0;
+  color: var(--foreground);
+}
+
+.detail-pane {
+  width: auto;
+  display: block;
+  padding-left: 0;
+  border-left: 0;
+  background: transparent;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 160ms ease;
+}
+
+.detail-pane.open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.task-list-container,
+.settings-section,
+.task-detail-panel,
+.workspace-card,
+.metric-card,
+.analytics-team-section,
+.onboarding-view-container,
+.pomodoro-widget,
+.add-habit-form,
+.habit-row,
+.kanban-column,
+.quick-entry-container,
+.briefing-card,
+.auth-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: blur(20px) saturate(130%);
+  -webkit-backdrop-filter: blur(20px) saturate(130%);
+}
+
+.task-list-container {
+  padding: 8px;
+  border-radius: 18px;
+}
+
+.project-header,
+.date-group-header {
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: var(--foreground-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  margin: 14px 8px 10px;
+}
+
+.upcoming-date-group + .upcoming-date-group {
+  margin-top: 20px;
+}
+
+.task-item-row {
+  border-radius: 14px;
+  border-color: transparent;
+  padding: 12px 14px;
+}
+
+.task-item-row:hover {
+  border-color: var(--border-strong);
+  background: rgba(255, 255, 255, 0.82);
+}
+
+.task-checkbox {
+  width: 22px;
+  height: 22px;
+}
+
+.task-title {
+  font-weight: 600;
+}
+
+.task-notes {
+  font-size: 0.88rem;
+}
+
+.reschedule-btn {
+  border: 1px solid transparent;
+  border-radius: 999px;
+  opacity: 0.85;
+}
+
+.reschedule-btn:hover {
+  border-color: var(--border);
+  background: rgba(255, 255, 255, 0.65);
+}
+
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px dashed var(--border-strong);
+}
+
+.empty-text,
+.empty-state-text {
+  color: var(--foreground-muted);
+}
+
+.onboarding-view-container,
+.settings-view-container,
+.workspaces-view-container,
+.analytics-view-container {
+  max-width: 980px;
+}
+
+.onboarding-view-container {
+  align-items: flex-start;
+  text-align: left;
+  gap: 12px;
+  border-radius: 26px;
+}
+
+.onboarding-view-container p {
+  margin-bottom: 0;
+}
+
+.feature-item {
+  border-radius: 14px;
+}
+
+.settings-view-container {
+  margin: 0;
+  padding: 0;
+}
+
+.settings-section {
+  border-radius: 18px;
+  padding: 22px;
+}
+
+.settings-field-label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--foreground);
+}
+
+.settings-field-hint {
+  display: block;
+  margin-top: -4px;
+  margin-bottom: 4px;
+  color: var(--foreground-muted);
+}
+
+.settings-text-input,
+.workspace-name-input,
+.invite-email-input,
+.detail-title-input,
+.detail-notes-input,
+.detail-priority-select,
+.detail-assignee-select,
+.comment-input,
+.auth-email,
+.auth-password {
+  width: 100%;
+  min-height: 42px;
+  padding: 10px 12px;
+  border-radius: 12px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.65);
+  color: var(--foreground);
+  outline: none;
+}
+
+.settings-text-input:focus,
+.workspace-name-input:focus,
+.invite-email-input:focus,
+.detail-title-input:focus,
+.detail-notes-input:focus,
+.detail-priority-select:focus,
+.detail-assignee-select:focus,
+.comment-input:focus,
+.auth-email:focus,
+.auth-password:focus,
+.quick-entry-input:focus {
+  border-color: rgba(var(--accent-rgb), 0.4);
+  box-shadow: 0 0 0 4px rgba(var(--accent-rgb), 0.12);
+}
+
+.detail-notes-input {
+  min-height: 120px;
+  resize: vertical;
+}
+
+.settings-action-btn,
+.backup-export-btn,
+.backup-import-btn,
+.todoist-import-btn,
+.notion-import-btn,
+.add-workspace-btn,
+.invite-btn,
+.add-subtask-btn,
+.detail-focus-btn,
+.send-comment-btn,
+.auth-login-btn,
+.auth-register-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 40px;
+  padding: 10px 16px;
+  border-radius: 12px;
+  border: 1px solid transparent;
+  background: linear-gradient(135deg, rgba(45, 108, 255, 0.94), rgba(110, 61, 255, 0.94));
+  color: #ffffff;
+  text-decoration: none;
+  font-weight: 600;
+  cursor: pointer;
+  box-shadow: 0 14px 24px rgba(68, 84, 180, 0.18);
+  transition: transform 160ms ease, box-shadow 160ms ease;
+}
+
+.backup-export-btn,
+.backup-import-btn,
+.todoist-import-btn,
+.notion-import-btn {
+  margin-right: 8px;
+  margin-top: 4px;
+}
+
+.import-result-toast {
+  margin-top: 12px;
+  color: var(--accent);
+  font-weight: 600;
+}
+
+.visually-hidden {
+  display: none;
+}
+
+.task-detail-panel {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  padding: 22px;
+  border-radius: 20px;
+}
+
+.detail-priority-container,
+.detail-assignee-container {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.detail-field-label {
+  font-size: 0.86rem;
+  font-weight: 600;
+  color: var(--foreground-muted);
+}
+
+.detail-subtasks-container h3,
+.detail-comments-container h3 {
+  margin: 0 0 8px;
+}
+
+.detail-subtasks-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.detail-subtask-item {
+  display: grid;
+  grid-template-columns: 18px minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+}
+
+.detail-subtask-item input[type="text"] {
+  width: 100%;
+  min-height: 38px;
+  padding: 8px 10px;
+  border-radius: 10px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.54);
+  color: var(--foreground);
+}
+
+.detail-comments-container {
+  margin-top: 8px;
+  padding-top: 16px;
+  border-top: 1px solid var(--border);
+}
+
+.comments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  max-height: 220px;
+  margin-bottom: 12px;
+  overflow-y: auto;
+}
+
+.comments-empty {
+  margin: 0;
+  color: var(--foreground-muted);
+  font-size: 0.86rem;
+  font-style: italic;
+}
+
+.comment-row {
+  padding: 12px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.42);
+  border: 1px solid var(--border);
+  font-size: 0.86rem;
+}
+
+.comment-author {
+  font-weight: 700;
+  color: var(--accent);
+}
+
+.comment-body {
+  margin-top: 4px;
+}
+
+.comment-time {
+  margin-top: 4px;
+  color: var(--foreground-muted);
+  font-size: 0.75rem;
+}
+
+.comment-form {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 8px;
+}
+
+.workspaces-list {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+
+.add-workspace-form,
+.workspace-invitation-row {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: 10px;
+}
+
+.workspace-card {
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.workspace-card-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 14px;
+}
+
+.workspace-title {
+  margin: 0;
+}
+
+.workspace-member-count {
+  padding: 6px 10px;
+  border-radius: 999px;
+  background: var(--accent-muted);
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+
+.workspace-members-list {
+  margin-top: 14px;
+  color: var(--foreground-muted);
+  font-size: 0.9rem;
+}
+
+.workspace-members-list ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+}
+
+.analytics-dashboard {
+  display: grid;
+  gap: 18px;
+  margin-top: 20px;
+}
+
+.analytics-metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+}
+
+.metric-card,
+.analytics-team-section {
+  padding: 20px;
+  border-radius: 20px;
+}
+
+.metric-label {
+  color: var(--foreground-muted);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.metric-value {
+  margin-top: 10px;
+  font-size: 2.25rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.metric-value-accent {
+  color: var(--accent);
+}
+
+.metric-caption {
+  margin-top: 6px;
+  color: var(--foreground-muted);
+  font-size: 0.86rem;
+}
+
+.analytics-section-header,
+.progress-label-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+
+.analytics-section-header h3 {
+  margin: 0;
+}
+
+.team-progress-bars {
+  margin-top: 16px;
+}
+
+.progress-track {
+  height: 10px;
+  margin-top: 8px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.56);
+  border: 1px solid var(--border);
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, rgba(45, 108, 255, 0.98), rgba(110, 61, 255, 0.9));
+}
+
+.mobile-header {
+  display: none;
+}
+
+.mobile-brand {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.mobile-brand-logo {
+  width: 28px;
+  height: 28px;
+}
+
+.mobile-brand-label {
+  font-size: 1.05rem;
+  font-weight: 700;
+  color: var(--foreground);
+}
+
+.mobile-header-actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.mobile-quick-add,
+.mobile-menu-btn {
+  width: 40px;
+  height: 40px;
+  padding: 0;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: rgba(255, 255, 255, 0.6);
+  color: var(--foreground);
+}
+
+.mobile-tabbar {
+  display: none;
+}
+
+.auth-view-container {
+  display: flex;
+  justify-content: center;
+  padding-top: 32px;
+}
+
+.auth-card {
+  width: min(100%, 420px);
+  padding: 24px;
+  border-radius: 24px;
+}
+
+.auth-card h2 {
+  margin-bottom: 6px;
+}
+
+.auth-subtitle {
+  margin-bottom: 18px;
+  color: var(--foreground-muted);
+}
+
+.auth-actions {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.auth-error-msg {
+  margin-top: 12px;
+  color: #cc3b3b;
+  min-height: 1.2em;
+}
+
+body.platform-macos .main-content {
+  padding-top: calc(env(titlebar-area-height, 0px) + 24px);
+}
+
+body.platform-macos .sidebar-container {
+  padding-top: calc(env(titlebar-area-height, 0px) + 18px);
+}
+
+body.platform-macos .task-list-container {
+  background: rgba(255, 255, 255, 0.7);
+}
+
+body.light-theme {
+  color-scheme: light;
+}
+
+.mac-toolbar {
+  display: none;
+}
+
+body.platform-macos {
+  --background: #f5f5f7;
+  --sidebar-background: rgba(246, 246, 248, 0.82);
+  --foreground: #1d1d1f;
+  --foreground-muted: #6e6e73;
+  --accent: #0a84ff;
+  --accent-hover: #0066cc;
+  --accent-muted: rgba(0, 122, 255, 0.14);
+  --accent-rgb: 10, 132, 255;
+  --surface: rgba(255, 255, 255, 0.72);
+  --surface-elevated: rgba(255, 255, 255, 0.94);
+  --border: rgba(60, 60, 67, 0.18);
+  --border-strong: rgba(60, 60, 67, 0.28);
+  --selection: rgba(0, 122, 255, 0.12);
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 12px 36px rgba(0, 0, 0, 0.12);
+  --sidebar-width: 248px;
+  font-family: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  font-size: 13px;
+  line-height: 1.35;
+  background: var(--background);
+}
+
+@media (prefers-color-scheme: dark) {
+  body.platform-macos {
+    --background: #1e1e20;
+    --sidebar-background: rgba(37, 37, 40, 0.82);
+    --foreground: #f5f5f7;
+    --foreground-muted: #a1a1a6;
+    --surface: rgba(44, 44, 47, 0.78);
+    --surface-elevated: rgba(50, 50, 54, 0.96);
+    --border: rgba(235, 235, 245, 0.14);
+    --border-strong: rgba(235, 235, 245, 0.24);
+    --selection: rgba(10, 132, 255, 0.18);
+  }
+}
+
+body.platform-macos .mac-toolbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  z-index: 1400;
+  display: grid;
+  grid-template-columns: 32px minmax(0, 1fr) 32px;
+  align-items: center;
+  gap: 8px;
+  height: 52px;
+  padding: 10px 16px 10px 84px;
+  background: rgba(246, 246, 248, 0.72);
+  border-bottom: 1px solid var(--border);
+  backdrop-filter: blur(28px) saturate(160%);
+  -webkit-backdrop-filter: blur(28px) saturate(160%);
+  -webkit-app-region: drag;
+}
+
+@media (prefers-color-scheme: dark) {
+  body.platform-macos .mac-toolbar {
+    background: rgba(37, 37, 40, 0.72);
+  }
+}
+
+body.platform-macos .mac-toolbar-button {
+  width: 28px;
+  height: 28px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  padding: 0;
+  border: 0;
+  border-radius: 6px;
+  color: var(--foreground-muted);
+  background: transparent;
+  cursor: pointer;
+  -webkit-app-region: no-drag;
+}
+
+body.platform-macos .mac-toolbar-button:hover {
+  color: var(--foreground);
+  background: rgba(60, 60, 67, 0.1);
+}
+
+body.platform-macos .mac-toolbar-button svg {
+  width: 17px;
+  height: 17px;
+  stroke-width: 1.8;
+}
+
+body.platform-macos .mac-toolbar-primary {
+  color: var(--accent);
+}
+
+body.platform-macos .mac-toolbar-title {
+  min-width: 0;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 600;
+  text-align: center;
+  user-select: none;
+}
+
+body.platform-macos .sidebar-container {
+  width: var(--sidebar-width);
+  gap: 12px;
+  padding: 66px 12px 14px;
+  background: var(--sidebar-background);
+  border-right: 1px solid var(--border);
+  box-shadow: none;
+}
+
+body.platform-macos .sidebar-brand {
+  display: none;
+}
+
+body.platform-macos #sidebar-nav {
+  gap: 1px;
+  padding-right: 0;
+}
+
+body.platform-macos .sidebar-link {
+  min-height: 28px;
+  gap: 8px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  color: var(--foreground);
+  font-size: 13px;
+  font-weight: 400;
+}
+
+body.platform-macos .sidebar-link:hover {
+  background: rgba(60, 60, 67, 0.08);
+}
+
+body.platform-macos .sidebar-link.active {
+  background: rgba(0, 122, 255, 0.16);
+  color: var(--foreground);
+  box-shadow: none;
+  font-weight: 500;
+}
+
+body.platform-macos .sidebar-icon {
+  width: 18px;
+  color: var(--foreground-muted);
+}
+
+body.platform-macos .sidebar-link.active .sidebar-icon {
+  color: var(--accent);
+}
+
+body.platform-macos .sidebar-icon svg {
+  width: 16px;
+  height: 16px;
+  stroke-width: 1.75;
+}
+
+body.platform-macos .sidebar-divider {
+  margin: 8px 0;
+}
+
+body.platform-macos .sidebar-quick-add {
+  min-height: 30px;
+  border-radius: 6px;
+  background: rgba(60, 60, 67, 0.08);
+  color: var(--foreground);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+body.platform-macos .sidebar-quick-add:hover {
+  background: rgba(60, 60, 67, 0.14);
+  transform: none;
+}
+
+body.platform-macos.mac-sidebar-collapsed {
+  --sidebar-width: 64px;
+}
+
+body.platform-macos.mac-sidebar-collapsed .sidebar-container {
+  padding-left: 10px;
+  padding-right: 10px;
+}
+
+body.platform-macos.mac-sidebar-collapsed .sidebar-label,
+body.platform-macos.mac-sidebar-collapsed .sidebar-divider,
+body.platform-macos.mac-sidebar-collapsed .sidebar-quick-add {
+  display: none;
+}
+
+body.platform-macos.mac-sidebar-collapsed .sidebar-link {
+  justify-content: center;
+  padding: 6px;
+}
+
+body.platform-macos .main-content {
+  padding: 72px 28px 30px;
+}
+
+body.platform-macos #view-container {
+  max-width: 1080px;
+  margin: 0 auto;
+}
+
+body.platform-macos .view-split-layout {
+  gap: 20px;
+}
+
+body.platform-macos .view-split-layout:has(.detail-pane.open) {
+  grid-template-columns: minmax(420px, 1fr) 340px;
+}
+
+body.platform-macos .list-pane {
+  gap: 12px;
+}
+
+body.platform-macos .list-pane > h1,
+body.platform-macos .settings-view-container h1,
+body.platform-macos .workspaces-view-container h1,
+body.platform-macos .analytics-view-container h1,
+body.platform-macos .pomodoro-view-container h1,
+body.platform-macos .focus-view-container h1 {
+  margin: 0 0 2px;
+  font-size: 26px;
+  line-height: 1.18;
+  font-weight: 700;
+}
+
+body.platform-macos .task-list-container,
+body.platform-macos .settings-section,
+body.platform-macos .task-detail-panel,
+body.platform-macos .workspace-card,
+body.platform-macos .metric-card,
+body.platform-macos .analytics-team-section,
+body.platform-macos .onboarding-view-container,
+body.platform-macos .pomodoro-widget,
+body.platform-macos .quick-entry-container,
+body.platform-macos .briefing-card,
+body.platform-macos .auth-card {
+  border-radius: 10px;
+  background: var(--surface-elevated);
+  border-color: var(--border);
+  box-shadow: var(--shadow-sm);
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+}
+
+body.platform-macos .task-list-container {
+  padding: 4px;
+}
+
+body.platform-macos .tasks-group {
+  gap: 1px;
+  margin-bottom: 12px;
+}
+
+body.platform-macos .project-header,
+body.platform-macos .date-group-header {
+  margin: 12px 8px 6px;
+  font-size: 11px;
+  letter-spacing: 0;
+  text-transform: none;
+  font-weight: 600;
+}
+
+body.platform-macos .task-item-row {
+  min-height: 42px;
+  gap: 10px;
+  padding: 8px 10px;
+  border-radius: 7px;
+  background: transparent;
+}
+
+body.platform-macos .task-item-row:hover {
+  border-color: transparent;
+  background: rgba(60, 60, 67, 0.07);
+  box-shadow: none;
+}
+
+body.platform-macos .task-checkbox {
+  width: 16px;
+  height: 16px;
+  border-width: 1.5px;
+}
+
+body.platform-macos .task-title {
+  font-size: 13px;
+  font-weight: 500;
+}
+
+body.platform-macos .task-notes {
+  font-size: 12px;
+}
+
+body.platform-macos .task-meta {
+  margin-top: 2px;
+}
+
+body.platform-macos .meta-priority,
+body.platform-macos .meta-date,
+body.platform-macos .meta-tag {
+  padding: 1px 5px;
+  font-size: 11px;
+}
+
+body.platform-macos .reschedule-btn {
+  width: 26px;
+  height: 26px;
+  padding: 0;
+  font-size: 13px;
+}
+
+body.platform-macos .detail-pane {
+  align-self: start;
+}
+
+body.platform-macos .task-detail-panel {
+  gap: 10px;
+  padding: 16px;
+}
+
+body.platform-macos .settings-text-input,
+body.platform-macos .workspace-name-input,
+body.platform-macos .invite-email-input,
+body.platform-macos .detail-title-input,
+body.platform-macos .detail-notes-input,
+body.platform-macos .detail-priority-select,
+body.platform-macos .detail-assignee-select,
+body.platform-macos .comment-input,
+body.platform-macos .auth-email,
+body.platform-macos .auth-password {
+  min-height: 30px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  background: var(--surface);
+  font-size: 13px;
+}
+
+body.platform-macos .detail-notes-input {
+  min-height: 90px;
+}
+
+body.platform-macos .settings-action-btn,
+body.platform-macos .backup-export-btn,
+body.platform-macos .backup-import-btn,
+body.platform-macos .todoist-import-btn,
+body.platform-macos .notion-import-btn,
+body.platform-macos .add-workspace-btn,
+body.platform-macos .invite-btn,
+body.platform-macos .add-subtask-btn,
+body.platform-macos .detail-focus-btn,
+body.platform-macos .send-comment-btn,
+body.platform-macos .auth-login-btn,
+body.platform-macos .auth-register-btn,
+body.platform-macos .empty-cta-btn {
+  min-height: 30px;
+  padding: 5px 12px;
+  border-radius: 6px;
+  background: var(--accent);
+  box-shadow: none;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+body.platform-macos .settings-section {
+  padding: 16px;
+}
+
+@media (max-width: 1024px) {
+  .view-split-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+
+  .detail-pane {
+    position: fixed;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 2200;
+    padding: 16px;
+    background: transparent;
+    transform: translateY(100%);
+    transition: transform 180ms ease;
+  }
+
+  .detail-pane.open {
+    transform: translateY(0);
+  }
+
+  .detail-close-btn {
+    display: inline-flex;
+    width: auto;
+    align-self: flex-start;
+    margin-bottom: 6px;
+    padding: 8px 12px;
+    border-radius: 999px;
+    border: 1px solid var(--border);
+    background: rgba(255, 255, 255, 0.72);
+  }
 }

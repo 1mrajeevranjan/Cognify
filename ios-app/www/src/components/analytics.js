@@ -22,33 +22,36 @@ export function AnalyticsView(store) {
     const totalFocusMinutes = sessions.reduce((acc, s) => acc + Math.round((s.duration || 0) / 60), 0);
 
     dashboard.innerHTML = `
-      <div class="analytics-metrics-grid" style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: var(--spacing-md); margin-bottom: var(--spacing-lg);">
-        <div class="metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: var(--spacing-md); text-align: center;">
-          <div style="font-size: 0.85rem; color: var(--foreground-muted); text-transform: uppercase;">Completion Rate</div>
-          <div style="font-size: 2.2rem; font-weight: 700; margin-top: 4px; color: var(--accent);">${rate}%</div>
-          <div style="font-size: 0.8rem; color: var(--foreground-muted); margin-top: 4px;">${completed} of ${total} tasks</div>
-        </div>
-        <div class="metric-card" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: var(--spacing-md); text-align: center;">
-          <div style="font-size: 0.85rem; color: var(--foreground-muted); text-transform: uppercase;">Focus Duration</div>
-          <div style="font-size: 2.2rem; font-weight: 700; margin-top: 4px; color: var(--foreground);">${totalFocusMinutes} min</div>
-          <div style="font-size: 0.8rem; color: var(--foreground-muted); margin-top: 4px;">${sessions.length} sessions logged</div>
-        </div>
+      <div class="analytics-metrics-grid">
+        <section class="metric-card">
+          <div class="metric-label">Completion Rate</div>
+          <div class="metric-value metric-value-accent">${rate}%</div>
+          <div class="metric-caption">${completed} of ${total} tasks finished</div>
+        </section>
+        <section class="metric-card">
+          <div class="metric-label">Focus Duration</div>
+          <div class="metric-value">${totalFocusMinutes} min</div>
+          <div class="metric-caption">${sessions.length} sessions logged</div>
+        </section>
       </div>
 
-      <div class="analytics-team-section" style="background: var(--surface); border: 1px solid var(--border); border-radius: 8px; padding: var(--spacing-md);">
-        <h3 style="margin-top: 0; border-bottom: 1px solid var(--border); padding-bottom: var(--spacing-xs);">Task Share breakdown</h3>
-        <div class="team-progress-bars" style="display: flex; flex-direction: column; gap: var(--spacing-sm); margin-top: var(--spacing-sm);">
+      <section class="analytics-team-section">
+        <div class="analytics-section-header">
+          <h3>Execution Trend</h3>
+          <span>${completed}/${total}</span>
+        </div>
+        <div class="team-progress-bars">
           <div class="progress-item">
-            <div style="display: flex; justify-content: space-between; font-size: 0.85rem; margin-bottom: 4px;">
-              <span>Total Project Tasks Progress</span>
-              <span>${completed}/${total}</span>
+            <div class="progress-label-row">
+              <span>Total task completion</span>
+              <span>${rate}%</span>
             </div>
-            <div style="height: 8px; background: var(--background); border-radius: 4px; overflow: hidden; border: 1px solid var(--border);">
-              <div style="height: 100%; width: ${rate}%; background: var(--accent); transition: width 0.3s;"></div>
+            <div class="progress-track">
+              <div class="progress-fill" style="width: ${rate}%;"></div>
             </div>
           </div>
         </div>
-      </div>
+      </section>
     `;
   }
 

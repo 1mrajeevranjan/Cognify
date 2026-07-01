@@ -20,21 +20,32 @@
 <body>
   <!-- Splash Screen -->
   <div id="splash" class="splash-overlay">
-    <div class="splash-logo">Cognify</div>
+    <div class="splash-brand">
+      <img src="logo.png" alt="Cognify logo" class="brand-logo splash-brand-logo">
+      <div class="splash-copy">
+        <div class="splash-logo">Cognify</div>
+        <div class="splash-tagline">Clear work. Calm focus.</div>
+      </div>
+    </div>
     <div class="splash-spinner"></div>
   </div>
 
   <div class="app-container">
     <!-- Mobile Header -->
     <header class="mobile-header">
-      <div class="mobile-brand">Cognify</div>
-      <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu">
-        <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="3" y1="12" x2="21" y2="12"></line>
-          <line x1="3" y1="6" x2="21" y2="6"></line>
-          <line x1="3" y1="18" x2="21" y2="18"></line>
-        </svg>
-      </button>
+      <div class="mobile-brand">
+        <img src="logo.png" alt="" class="brand-logo mobile-brand-logo">
+        <span class="mobile-brand-label">Cognify</span>
+      </div>
+      <div class="mobile-header-actions">
+        <button id="mobile-quick-add" class="mobile-quick-add" aria-label="Create task">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.9" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+            <path d="M12 5v14"></path>
+            <path d="M5 12h14"></path>
+          </svg>
+        </button>
+        <button id="mobile-menu-btn" class="mobile-menu-btn" aria-label="Open menu"></button>
+      </div>
     </header>
 
     <!-- Sidebar overlay for mobile -->
@@ -42,8 +53,15 @@
 
     <!-- Sidebar -->
     <div id="sidebar" class="sidebar-container">
-      <div class="sidebar-brand">Cognify</div>
+      <div class="sidebar-brand">
+        <img src="logo.png" alt="" class="brand-logo sidebar-brand-logo">
+        <div class="sidebar-brand-copy">
+          <div class="sidebar-brand-title">Cognify</div>
+          <div class="sidebar-brand-subtitle">Calm task planning</div>
+        </div>
+      </div>
       <nav id="sidebar-nav"></nav>
+      <button id="sidebar-quick-add" class="sidebar-quick-add" type="button">New Task</button>
     </div>
 
     <!-- Main View -->
@@ -51,6 +69,8 @@
       <div id="view-container"></div>
     </main>
   </div>
+
+  <nav id="mobile-tabbar" class="mobile-tabbar" aria-label="Primary"></nav>
 
   <!-- Capacitor bridge (injected by native layer) -->
   <script src="capacitor.js"></script>

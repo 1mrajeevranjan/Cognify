@@ -28,19 +28,51 @@ function createWindow() {
     shell.openExternal(url);
     return { action: 'deny' };
   });
+
+  return win;
 }
 
 app.whenReady().then(() => {
-  // Build a minimal macOS menu
+  const win = createWindow();
+
+  // Build a minimal macOS menu with desktop actions.
   const template = [
     { role: 'appMenu' },
+    {
+      label: 'File',
+      submenu: [
+        {
+          label: 'New Task',
+          accelerator: 'CmdOrCtrl+N',
+          click: () => win.webContents.executeJavaScript("window.dispatchEvent(new Event('cognify-open-quick-entry'))")
+        },
+        { type: 'separator' },
+        { role: 'close' }
+      ]
+    },
     { role: 'editMenu' },
-    { role: 'viewMenu' },
+    {
+      label: 'View',
+      submenu: [
+        {
+          label: 'Toggle Sidebar',
+          accelerator: 'CmdOrCtrl+Option+S',
+          click: () => win.webContents.executeJavaScript("window.dispatchEvent(new Event('cognify-toggle-sidebar'))")
+        },
+        { type: 'separator' },
+        { role: 'reload' },
+        { role: 'toggleDevTools' },
+        { type: 'separator' },
+        { role: 'resetZoom' },
+        { role: 'zoomIn' },
+        { role: 'zoomOut' },
+        { type: 'separator' },
+        { role: 'togglefullscreen' }
+      ]
+    },
     { role: 'windowMenu' },
   ];
   Menu.setApplicationMenu(Menu.buildFromTemplate(template));
-
-  createWindow();
 
   app.on('activate', () => {
     if (BrowserWindow.getAllWindows().length === 0) createWindow();

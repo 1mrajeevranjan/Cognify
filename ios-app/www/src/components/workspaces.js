@@ -12,14 +12,13 @@ export function WorkspacesView(store) {
   const createForm = document.createElement('div');
   createForm.className = 'add-workspace-form';
   createForm.innerHTML = `
-    <input class="workspace-name-input" placeholder="New Workspace Name..." style="padding: var(--spacing-sm); border: 1px solid var(--border); border-radius: 6px; background: var(--surface); color: var(--foreground); font-family: var(--font-sans);" />
-    <button class="add-workspace-btn" style="padding: var(--spacing-sm) var(--spacing-md); background: var(--accent); color: white; border: none; border-radius: 6px; cursor: pointer; font-family: var(--font-sans); font-weight: 500;">+ Create Team</button>
+    <input class="workspace-name-input" placeholder="New workspace name" />
+    <button class="add-workspace-btn">Create Team</button>
   `;
   el.appendChild(createForm);
 
   const listEl = document.createElement('div');
   listEl.className = 'workspaces-list';
-  listEl.style.marginTop = 'var(--spacing-lg)';
   el.appendChild(listEl);
 
   const addBtn = createForm.querySelector('.add-workspace-btn');
@@ -64,23 +63,21 @@ export function WorkspacesView(store) {
     for (const w of list) {
       const card = document.createElement('div');
       card.className = 'workspace-card';
-      card.style.border = '1px solid var(--border)';
-      card.style.borderRadius = '8px';
-      card.style.background = 'var(--surface)';
-      card.style.padding = 'var(--spacing-md)';
-      card.style.marginBottom = 'var(--spacing-md)';
       
       const wMembers = members.filter(m => m.workspaceId === w.id);
 
       card.innerHTML = `
-        <h3 class="workspace-title" style="margin-top: 0;">${w.name}</h3>
-        <div class="workspace-invitation-row" style="display: flex; gap: var(--spacing-xs); margin-bottom: var(--spacing-sm);">
-          <input class="invite-email-input" type="email" placeholder="Invite by email..." style="flex: 1; padding: var(--spacing-xs); border: 1px solid var(--border); border-radius: 4px; background: var(--background); color: var(--foreground); font-family: var(--font-sans);" />
-          <button class="invite-btn" style="padding: var(--spacing-xs) var(--spacing-sm); background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-family: var(--font-sans);">Invite</button>
+        <div class="workspace-card-header">
+          <h3 class="workspace-title">${w.name}</h3>
+          <span class="workspace-member-count">${wMembers.length || 1} member${wMembers.length === 1 ? '' : 's'}</span>
         </div>
-        <div class="workspace-members-list" style="font-size: 0.9rem; color: var(--foreground-muted);">
-          <strong>Members:</strong>
-          <ul style="padding-left: var(--spacing-md); margin-top: 4px;">
+        <div class="workspace-invitation-row">
+          <input class="invite-email-input" type="email" placeholder="Invite by email" />
+          <button class="invite-btn">Invite</button>
+        </div>
+        <div class="workspace-members-list">
+          <strong>Members</strong>
+          <ul>
             ${wMembers.map(m => `<li>${m.email} (${m.role})</li>`).join('') || '<li>Only you</li>'}
           </ul>
         </div>

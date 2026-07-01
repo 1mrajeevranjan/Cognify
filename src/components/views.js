@@ -223,39 +223,22 @@ export function SettingsView(store) {
   aiSection.className = 'settings-section';
   aiSection.innerHTML = `<h3>AI Settings</h3>`;
   const keyLabel = document.createElement('label');
+  keyLabel.className = 'settings-field-label';
   keyLabel.textContent = 'Gemini API Key';
-  keyLabel.style.display = 'block';
-  keyLabel.style.marginBottom = 'var(--spacing-xs)';
   const keyInput = document.createElement('input');
   keyInput.type = 'password';
-  keyInput.className = 'gemini-key-input';
+  keyInput.className = 'settings-text-input gemini-key-input';
   keyInput.placeholder = 'AIza...';
-  keyInput.style.display = 'block';
-  keyInput.style.width = '100%';
-  keyInput.style.padding = 'var(--spacing-sm)';
-  keyInput.style.marginBottom = 'var(--spacing-sm)';
-  keyInput.style.border = '1px solid var(--border)';
-  keyInput.style.borderRadius = '6px';
-  keyInput.style.background = 'var(--surface)';
-  keyInput.style.color = 'var(--foreground)';
   if (store) {
     const existing = store.getCached('settings', 'gemini-api-key');
     if (existing && existing.value) keyInput.value = existing.value;
   }
   const keyHint = document.createElement('small');
+  keyHint.className = 'settings-field-hint';
   keyHint.textContent = 'Get a free key at aistudio.google.com';
-  keyHint.style.display = 'block';
-  keyHint.style.color = 'var(--foreground-muted)';
-  keyHint.style.marginBottom = 'var(--spacing-sm)';
   const saveKeyBtn = document.createElement('button');
-  saveKeyBtn.className = 'save-key-btn';
+  saveKeyBtn.className = 'settings-action-btn save-key-btn';
   saveKeyBtn.textContent = 'Save API Key';
-  saveKeyBtn.style.padding = 'var(--spacing-sm) var(--spacing-md)';
-  saveKeyBtn.style.background = 'var(--accent)';
-  saveKeyBtn.style.color = 'white';
-  saveKeyBtn.style.border = 'none';
-  saveKeyBtn.style.borderRadius = '6px';
-  saveKeyBtn.style.cursor = 'pointer';
   saveKeyBtn.addEventListener('click', () => {
     if (store) store.put('settings', { key: 'gemini-api-key', value: keyInput.value });
     saveKeyBtn.textContent = 'Saved!';
@@ -300,7 +283,7 @@ export function SettingsView(store) {
   const importInput = document.createElement('input');
   importInput.setAttribute('type', 'file');
   importInput.setAttribute('accept', '.json');
-  importInput.style.display = 'none';
+  importInput.className = 'visually-hidden';
   
   const importBtn = document.createElement('button');
   importBtn.classList.add('backup-import-btn');
@@ -340,16 +323,13 @@ export function SettingsView(store) {
   const todoistInput = document.createElement('input');
   todoistInput.type = 'file';
   todoistInput.accept = '.json';
-  todoistInput.style.display = 'none';
+  todoistInput.className = 'visually-hidden';
   const todoistBtn = document.createElement('button');
   todoistBtn.className = 'todoist-import-btn';
   todoistBtn.textContent = 'Import from Todoist';
   todoistBtn.addEventListener('click', () => todoistInput.click());
   const importResultDiv = document.createElement('div');
   importResultDiv.className = 'import-result-toast';
-  importResultDiv.style.marginTop = 'var(--spacing-sm)';
-  importResultDiv.style.color = 'var(--accent)';
-  importResultDiv.style.fontWeight = '500';
   todoistInput.addEventListener('change', async (e) => {
     const file = e.target.files[0]; if (!file) return;
     const { importTodoist } = await import('../import.js');
@@ -364,7 +344,7 @@ export function SettingsView(store) {
   const notionInput = document.createElement('input');
   notionInput.type = 'file';
   notionInput.accept = '.csv';
-  notionInput.style.display = 'none';
+  notionInput.className = 'visually-hidden';
   const notionBtn = document.createElement('button');
   notionBtn.className = 'notion-import-btn';
   notionBtn.textContent = 'Import from Notion';
@@ -389,20 +369,11 @@ export function SettingsView(store) {
   
   // Slack Webhook URL
   const slackLabel = document.createElement('label');
+  slackLabel.className = 'settings-field-label';
   slackLabel.textContent = 'Slack Webhook URL';
-  slackLabel.style.display = 'block';
-  slackLabel.style.marginBottom = 'var(--spacing-xs)';
   const slackInput = document.createElement('input');
-  slackInput.className = 'slack-webhook-input';
+  slackInput.className = 'settings-text-input slack-webhook-input';
   slackInput.placeholder = 'https://hooks.slack.com/...';
-  slackInput.style.display = 'block';
-  slackInput.style.width = '100%';
-  slackInput.style.padding = 'var(--spacing-sm)';
-  slackInput.style.marginBottom = 'var(--spacing-sm)';
-  slackInput.style.border = '1px solid var(--border)';
-  slackInput.style.borderRadius = '6px';
-  slackInput.style.background = 'var(--surface)';
-  slackInput.style.color = 'var(--foreground)';
   if (store) {
     const existing = store.getCached('settings', 'slack_webhook');
     if (existing && existing.value) slackInput.value = existing.value;
@@ -410,21 +381,12 @@ export function SettingsView(store) {
   
   // GitHub PAT
   const githubLabel = document.createElement('label');
+  githubLabel.className = 'settings-field-label';
   githubLabel.textContent = 'GitHub Personal Access Token';
-  githubLabel.style.display = 'block';
-  githubLabel.style.marginBottom = 'var(--spacing-xs)';
   const githubInput = document.createElement('input');
   githubInput.type = 'password';
-  githubInput.className = 'github-token-input';
+  githubInput.className = 'settings-text-input github-token-input';
   githubInput.placeholder = 'ghp_...';
-  githubInput.style.display = 'block';
-  githubInput.style.width = '100%';
-  githubInput.style.padding = 'var(--spacing-sm)';
-  githubInput.style.marginBottom = 'var(--spacing-sm)';
-  githubInput.style.border = '1px solid var(--border)';
-  githubInput.style.borderRadius = '6px';
-  githubInput.style.background = 'var(--surface)';
-  githubInput.style.color = 'var(--foreground)';
   if (store) {
     const existing = store.getCached('settings', 'github_token');
     if (existing && existing.value) githubInput.value = existing.value;
@@ -432,34 +394,19 @@ export function SettingsView(store) {
 
   // GitHub Repo
   const githubRepoLabel = document.createElement('label');
+  githubRepoLabel.className = 'settings-field-label';
   githubRepoLabel.textContent = 'GitHub Target Repository (Owner/Repo)';
-  githubRepoLabel.style.display = 'block';
-  githubRepoLabel.style.marginBottom = 'var(--spacing-xs)';
   const githubRepoInput = document.createElement('input');
-  githubRepoInput.className = 'github-repo-input';
+  githubRepoInput.className = 'settings-text-input github-repo-input';
   githubRepoInput.placeholder = 'e.g. 1mrajeevranjan/Cognify';
-  githubRepoInput.style.display = 'block';
-  githubRepoInput.style.width = '100%';
-  githubRepoInput.style.padding = 'var(--spacing-sm)';
-  githubRepoInput.style.marginBottom = 'var(--spacing-sm)';
-  githubRepoInput.style.border = '1px solid var(--border)';
-  githubRepoInput.style.borderRadius = '6px';
-  githubRepoInput.style.background = 'var(--surface)';
-  githubRepoInput.style.color = 'var(--foreground)';
   if (store) {
     const existing = store.getCached('settings', 'github_repo');
     if (existing && existing.value) githubRepoInput.value = existing.value;
   }
 
   const saveIntBtn = document.createElement('button');
-  saveIntBtn.className = 'save-integrations-btn';
+  saveIntBtn.className = 'settings-action-btn save-integrations-btn';
   saveIntBtn.textContent = 'Save Integrations';
-  saveIntBtn.style.padding = 'var(--spacing-sm) var(--spacing-md)';
-  saveIntBtn.style.background = 'var(--accent)';
-  saveIntBtn.style.color = 'white';
-  saveIntBtn.style.border = 'none';
-  saveIntBtn.style.borderRadius = '6px';
-  saveIntBtn.style.cursor = 'pointer';
   saveIntBtn.addEventListener('click', async () => {
     if (store) {
       await store.put('settings', { key: 'slack_webhook', value: slackInput.value.trim() });
@@ -677,7 +624,7 @@ export function AuthView(store) {
         <button class="auth-login-btn">Log In</button>
         <button class="auth-register-btn">Sign Up</button>
       </div>
-      <p class="auth-error-msg" style="color: red; margin-top: 10px;"></p>
+      <p class="auth-error-msg"></p>
     </div>
   `;
   
@@ -731,4 +678,3 @@ export { AnalyticsView } from './analytics.js';
 export { EisenhowerView } from './eisenhower.js';
 export { CalendarView } from './calendar.js';
 export { WeeklyReviewView } from './weeklyreview.js';
-

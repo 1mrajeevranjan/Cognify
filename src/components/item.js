@@ -373,21 +373,14 @@ export function TaskDetailPanel(task, callbacks = {}) {
   // Assignee dropdown selector
   const assigneeContainer = document.createElement('div');
   assigneeContainer.classList.add('detail-assignee-container');
-  assigneeContainer.style.marginTop = 'var(--spacing-sm)';
   
   const assigneeLabel = document.createElement('span');
+  assigneeLabel.className = 'detail-field-label';
   assigneeLabel.textContent = 'Assignee:';
-  assigneeLabel.style.marginRight = 'var(--spacing-xs)';
   assigneeContainer.appendChild(assigneeLabel);
 
   const assigneeSelect = document.createElement('select');
   assigneeSelect.classList.add('detail-assignee-select');
-  assigneeSelect.style.padding = '4px 8px';
-  assigneeSelect.style.borderRadius = '4px';
-  assigneeSelect.style.border = '1px solid var(--border)';
-  assigneeSelect.style.background = 'var(--surface)';
-  assigneeSelect.style.color = 'var(--foreground)';
-  assigneeSelect.style.fontFamily = 'var(--font-sans)';
   
   // Default unassigned option
   const optNone = document.createElement('option');
@@ -415,38 +408,19 @@ export function TaskDetailPanel(task, callbacks = {}) {
   const focusBtn = document.createElement('a');
   focusBtn.className = 'detail-focus-btn';
   focusBtn.href = `#focus?id=${taskCopy.id}`;
-  focusBtn.textContent = '▶ Focus Mode';
-  focusBtn.style.display = 'inline-block';
-  focusBtn.style.marginTop = 'var(--spacing-md)';
-  focusBtn.style.padding = 'var(--spacing-sm) var(--spacing-md)';
-  focusBtn.style.background = 'var(--accent)';
-  focusBtn.style.color = 'white';
-  focusBtn.style.textDecoration = 'none';
-  focusBtn.style.borderRadius = '6px';
-  focusBtn.style.fontSize = '0.9rem';
-  focusBtn.style.fontWeight = '500';
+  focusBtn.textContent = 'Focus Mode';
   el.appendChild(focusBtn);
 
   // Real-time comments section
   const commentsContainer = document.createElement('div');
   commentsContainer.className = 'detail-comments-container';
-  commentsContainer.style.marginTop = 'var(--spacing-lg)';
-  commentsContainer.style.borderTop = '1px solid var(--border)';
-  commentsContainer.style.paddingTop = 'var(--spacing-md)';
 
   const commentsHeader = document.createElement('h3');
   commentsHeader.textContent = 'Comments';
-  commentsHeader.style.marginTop = '0';
   commentsContainer.appendChild(commentsHeader);
 
   const commentsList = document.createElement('div');
   commentsList.className = 'comments-list';
-  commentsList.style.display = 'flex';
-  commentsList.style.flexDirection = 'column';
-  commentsList.style.gap = 'var(--spacing-sm)';
-  commentsList.style.maxHeight = '200px';
-  commentsList.style.overflowY = 'auto';
-  commentsList.style.marginBottom = 'var(--spacing-sm)';
   commentsContainer.appendChild(commentsList);
 
   function renderComments() {
@@ -457,28 +431,26 @@ export function TaskDetailPanel(task, callbacks = {}) {
       .sort((a, b) => a.createdAt - b.createdAt);
     commentsList.innerHTML = '';
     if (taskComments.length === 0) {
-      commentsList.innerHTML = '<p style="color: var(--foreground-muted); font-size: 0.85rem; font-style: italic; margin: 0;">No comments yet</p>';
+      commentsList.innerHTML = '<p class="comments-empty">No comments yet</p>';
       return;
     }
     for (const c of taskComments) {
       const row = document.createElement('div');
       row.className = 'comment-row';
-      row.style.fontSize = '0.85rem';
       row.innerHTML = `
-        <div style="font-weight: 600; color: var(--accent);">${c.userEmail.split('@')[0]}</div>
-        <div style="margin-top: 2px;">${c.content}</div>
-        <div style="font-size: 0.75rem; color: var(--foreground-muted); margin-top: 2px;">${new Date(c.createdAt).toLocaleTimeString()}</div>
+        <div class="comment-author">${c.userEmail.split('@')[0]}</div>
+        <div class="comment-body">${c.content}</div>
+        <div class="comment-time">${new Date(c.createdAt).toLocaleTimeString()}</div>
       `;
       commentsList.appendChild(row);
     }
   }
 
   const commentForm = document.createElement('div');
-  commentForm.style.display = 'flex';
-  commentForm.style.gap = 'var(--spacing-xs)';
+  commentForm.className = 'comment-form';
   commentForm.innerHTML = `
-    <input class="comment-input" placeholder="Type a comment..." style="flex: 1; padding: var(--spacing-xs); border: 1px solid var(--border); border-radius: 4px; background: var(--surface); color: var(--foreground); font-family: var(--font-sans); font-size: 0.85rem;" />
-    <button class="send-comment-btn" style="padding: var(--spacing-xs) var(--spacing-sm); background: var(--accent); color: white; border: none; border-radius: 4px; cursor: pointer; font-size: 0.85rem;">Send</button>
+    <input class="comment-input" placeholder="Type a comment..." />
+    <button class="send-comment-btn">Send</button>
   `;
   commentsContainer.appendChild(commentForm);
 
